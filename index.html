@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POME BOX — 作ったゲームと、くだらないブログの箱。</title>
+<meta name="description" content="自作ブラウザゲームと、くだらないブログを詰め込んだ個人サイト。POME BOX。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@300;400;500;700&family=Archivo:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FBFAF4;
+  --chalk:#F1F3EC;
+  --ink:#1B3550;
+  --ink-soft:#4C6379;
+  --ao:#2E6FA3;
+  --sora:#7FB5DE;
+  --gold:#F2B84B;
+  --coral:#F27E63;
+  --mint:#7ECBA1;
+  --line:rgba(27,53,80,.14);
+  --pixel:"DotGothic16",monospace;
+  --sans:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",sans-serif;
+  --latin:"Archivo","Helvetica Neue",Arial,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--cream);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:2;
+  letter-spacing:.05em;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--ao);color:#fff}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.container{max-width:1120px;margin:0 auto;padding:0 clamp(20px,5vw,60px)}
+header{
+  position:fixed;inset:0 0 auto 0;z-index:50;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px clamp(20px,4vw,48px);
+  transition:background .5s,box-shadow .5s;
+}
+header.scrolled{background:rgba(251,250,244,.92);backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--line)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:38px;height:38px;border-radius:10px;
+  background:var(--ao);
+  display:grid;place-items:center;color:#fff;
+  font-family:var(--pixel);font-size:19px;flex:none;
+  box-shadow:3px 3px 0 var(--gold);
+}
+.brand-text{line-height:1.35}
+.brand-text .en{font-family:var(--pixel);font-size:17px;letter-spacing:.12em;color:var(--ink)}
+.brand-text .jp{display:block;font-size:9.5px;letter-spacing:.28em;color:var(--ink-soft)}
+nav.g{display:flex;gap:28px;font-family:var(--latin);font-size:11.5px;font-weight:600;letter-spacing:.22em;text-transform:uppercase}
+nav.g a{position:relative;padding:4px 0}
+nav.g a::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--gold);transition:width .4s cubic-bezier(.22,1,.36,1)}
+nav.g a:hover::after,nav.g a:focus-visible::after{width:100%}
+@media(max-width:700px){nav.g{display:none}}
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;overflow:hidden}
+#playground{position:absolute;inset:0;width:100%;height:100%}
+.hero-copy{position:relative;z-index:2;width:100%;text-align:center;padding:90px 20px 60px}
+.hero-copy .logo{
+  font-family:var(--pixel);
+  font-size:clamp(44px,11vw,120px);
+  line-height:1.15;letter-spacing:.06em;
+  color:var(--ink);
+  text-shadow:5px 5px 0 var(--sora);
+  opacity:0;animation:pop .9s .2s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.hero-copy .logo em{font-style:normal;color:var(--ao);text-shadow:5px 5px 0 var(--gold)}
+.hero-copy .tag{
+  margin-top:26px;
+  font-size:clamp(13px,1.8vw,17px);letter-spacing:.24em;
+  color:var(--ink-soft);
+  opacity:0;animation:pop .9s .5s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.hero-cta{
+  display:inline-flex;gap:16px;margin-top:40px;flex-wrap:wrap;justify-content:center;
+  opacity:0;animation:pop .9s .75s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.btn{
+  display:inline-block;
+  font-family:var(--pixel);font-size:16px;letter-spacing:.1em;
+  padding:14px 30px;border-radius:12px;
+  border:2.5px solid var(--ink);
+  background:var(--gold);color:var(--ink);
+  box-shadow:4px 4px 0 var(--ink);
+  transition:transform .18s,box-shadow .18s;
+}
+.btn.ghost{background:#fff}
+.btn:hover{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+@keyframes pop{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+.hero-scroll{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:2;
+  font-family:var(--pixel);font-size:12px;letter-spacing:.3em;color:var(--ink-soft);
+  animation:hop 1.6s ease-in-out infinite;
+}
+@keyframes hop{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-8px)}}
+section{padding:clamp(80px,12vh,130px) 0}
+.sec-head{display:flex;align-items:baseline;gap:20px;margin-bottom:clamp(34px,5vh,54px);flex-wrap:wrap}
+.sec-head .en{
+  font-family:var(--pixel);
+  font-size:clamp(30px,5vw,52px);letter-spacing:.08em;
+  color:var(--ink);
+  text-shadow:4px 4px 0 rgba(127,181,222,.55);
+}
+.sec-head .jp{font-size:12.5px;letter-spacing:.3em;color:var(--ao);font-weight:500}
+.games{background:linear-gradient(var(--cream),var(--chalk) 15%,var(--chalk) 85%,var(--cream))}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(20px,3vw,32px)}
+.game-card{
+  background:#fff;border:2.5px solid var(--ink);border-radius:18px;
+  overflow:hidden;position:relative;
+  box-shadow:6px 6px 0 rgba(27,53,80,.16);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
+  display:flex;flex-direction:column;
+}
+.game-card:hover{transform:translateY(-8px) rotate(-.6deg);box-shadow:10px 12px 0 rgba(46,111,163,.22)}
+.game-screen{aspect-ratio:16/10;position:relative;overflow:hidden}
+.game-screen svg{width:100%;height:100%;display:block}
+.game-badge{
+  position:absolute;top:12px;left:12px;
+  font-family:var(--pixel);font-size:12px;letter-spacing:.14em;
+  background:var(--gold);color:var(--ink);
+  border:2px solid var(--ink);border-radius:8px;padding:4px 12px;
+}
+.game-badge.making{background:var(--mint)}
+.game-badge.idea{background:#E6E2F5}
+.game-body{padding:22px 24px 26px;display:flex;flex-direction:column;flex:1}
+.game-body h3{font-family:var(--pixel);font-size:21px;letter-spacing:.06em;margin-bottom:8px}
+.game-body .genre{font-family:var(--latin);font-weight:600;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--ao);margin-bottom:12px}
+.game-body p{font-size:13px;color:var(--ink-soft);line-height:1.95;flex:1}
+.game-body .play{
+  margin-top:20px;align-self:flex-start;
+  font-family:var(--pixel);font-size:15px;letter-spacing:.1em;
+  padding:10px 24px;border-radius:10px;
+  border:2.5px solid var(--ink);
+  background:var(--ao);color:#fff;
+  box-shadow:3px 3px 0 var(--ink);
+  transition:transform .18s,box-shadow .18s;
+}
+.game-body .play:hover{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.game-body .play.disabled{background:#C8D2DC;color:var(--ink-soft);pointer-events:none;box-shadow:3px 3px 0 rgba(27,53,80,.35)}
+.b-entry{
+  display:grid;grid-template-columns:110px 44px 1fr;gap:clamp(14px,3vw,32px);
+  align-items:center;
+  padding:22px 4px;
+  border-bottom:2px dashed var(--line);
+  transition:background .4s,transform .4s;
+  border-radius:10px;
+}
+.b-entry:first-of-type{border-top:2px dashed var(--line)}
+.b-entry:hover{background:rgba(127,181,222,.14);transform:translateX(6px)}
+.b-entry .date{font-family:var(--latin);font-weight:600;font-size:11.5px;letter-spacing:.16em;color:var(--ink-soft)}
+.b-entry .face{
+  width:40px;height:40px;border-radius:10px;
+  border:2px solid var(--ink);
+  display:grid;place-items:center;
+  font-family:var(--pixel);font-size:19px;
+  background:#fff;
+}
+.b-entry h3{font-size:clamp(14.5px,1.8vw,17px);letter-spacing:.06em;line-height:1.85;font-weight:500}
+.b-entry:hover h3{color:var(--ao)}
+@media(max-width:600px){.b-entry{grid-template-columns:44px 1fr}.b-entry .date{grid-column:2;order:3;margin-top:-6px}}
+.blog-note{
+  margin-top:34px;text-align:center;
+  font-size:12.5px;color:var(--ink-soft);letter-spacing:.12em;
+}
+.about{background:linear-gradient(var(--cream),var(--chalk) 15%,var(--chalk) 85%,var(--cream))}
+.about-box{
+  max-width:720px;margin:0 auto;text-align:center;
+}
+.about-box .face-big{
+  width:84px;height:84px;margin:0 auto 24px;border-radius:20px;
+  border:3px solid var(--ink);background:#fff;
+  display:grid;place-items:center;
+  font-family:var(--pixel);font-size:40px;
+  box-shadow:5px 5px 0 var(--sora);
+}
+.about-box h3{font-family:var(--pixel);font-size:clamp(20px,3vw,26px);letter-spacing:.08em;margin-bottom:16px}
+.about-box p{font-size:13.5px;color:var(--ink-soft);max-width:34em;margin:0 auto}
+footer{padding:60px clamp(20px,5vw,60px) 40px;text-align:center}
+.f-logo{font-family:var(--pixel);font-size:clamp(22px,3.4vw,30px);letter-spacing:.1em;margin-bottom:20px}
+.f-logo em{font-style:normal;color:var(--ao)}
+.f-links{display:flex;justify-content:center;gap:32px;margin-bottom:32px;flex-wrap:wrap}
+.f-links a{
+  font-family:var(--latin);font-weight:600;font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  border-bottom:2px solid var(--line);padding-bottom:5px;transition:border-color .4s;
+}
+.f-links a:hover{border-color:var(--gold)}
+footer small{display:block;font-family:var(--latin);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:#93A3B2;line-height:2.2}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .9s cubic-bezier(.22,1,.36,1),transform .9s cubic-bezier(.22,1,.36,1)}
+.reveal.is-in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .hero-copy .logo,.hero-copy .tag,.hero-cta,.reveal{opacity:1!important;transform:none!important}
+  html{scroll-behavior:auto}
+}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+</style>
+</head>
+<body>
+<header id="hd">
+  <a class="brand" href="#top">
+    <span class="brand-mark">箱</span>
+    <span class="brand-text">
+      <span class="en">POME BOX</span>
+      <span class="jp">ゲームとブログの箱</span>
+    </span>
+  </a>
+  <nav class="g" aria-label="メイン">
+    <a href="#games">Games</a>
+    <a href="#blog">Blog</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
+<section class="hero" id="top">
+  <canvas id="playground" aria-hidden="true"></canvas>
+  <div class="hero-copy">
+    <h1 class="logo">POME <em>BOX</em></h1>
+    <p class="tag">作ったゲームと、くだらないブログの箱。</p>
+    <div class="hero-cta">
+      <a class="btn" href="#games">▶ ゲームで遊ぶ</a>
+      <a class="btn ghost" href="#blog">ブログを読む</a>
+    </div>
+  </div>
+  <p class="hero-scroll" aria-hidden="true">▼ SCROLL</p>
+</section>
+<section class="games" id="games">
+  <div class="container">
+    <div class="sec-head reveal">
+      <span class="en">GAMES</span>
+      <span class="jp">あそべる箱の中身</span>
+    </div>
+    <div class="game-grid">
+      <article class="game-card reveal">
+        <div class="game-screen">
+          <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="つじいちゃん栽培キットのイメージ">
+            <rect width="320" height="200" fill="#BFE3F5"/>
+            <rect y="150" width="320" height="50" fill="#8A5A3B"/>
+            <rect y="144" width="320" height="8" fill="#6E4227"/>
+            <rect x="140" y="96" width="8" height="52" fill="#4E8F4E"/>
+            <path d="M144 108 q-20 -8 -24 -26 q20 2 24 26Z" fill="#7ECBA1"/>
+            <path d="M144 122 q20 -6 26 -24 q-20 0 -26 24Z" fill="#5FAF7F"/>
+            <circle cx="144" cy="78" r="26" fill="#F5D9A8" stroke="#1B3550" stroke-width="3"/>
+            <circle cx="136" cy="74" r="3.4" fill="#1B3550"/>
+            <circle cx="152" cy="74" r="3.4" fill="#1B3550"/>
+            <path d="M135 88 q9 7 18 0" stroke="#1B3550" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <rect x="220" y="60" width="14" height="14" fill="#F2B84B"/>
+            <rect x="250" y="96" width="10" height="10" fill="#F27E63"/>
+            <rect x="60" y="50" width="12" height="12" fill="#7FB5DE"/>
+            <rect x="84" y="112" width="8" height="8" fill="#F2B84B"/>
+          </svg>
+          <span class="game-badge">PLAY FREE</span>
+        </div>
+        <div class="game-body">
+          <h3>つじいちゃん栽培キット</h3>
+          <p class="genre">育成 / ブラウザゲーム</p>
+          <p>土に植えて、水をやると、つじいちゃんが生えてくる。表情ちがいのつじいちゃんが収穫できる、癒し（？）の栽培シミュレーション。インストール不要、ブラウザですぐ遊べます。</p>
+          <a class="play" href="https://frontiveja-sketch.github.io/nameko/" target="_blank" rel="noopener">▶ PLAY</a>
+        </div>
+      </article>
+      <article class="game-card reveal">
+        <div class="game-screen">
+          <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ときめきの放課後DXのイメージ">
+            <rect width="320" height="200" fill="#F8E3EA"/>
+            <rect x="24" y="130" width="272" height="52" rx="10" fill="#fff" stroke="#1B3550" stroke-width="3"/>
+            <rect x="40" y="146" width="150" height="8" rx="4" fill="#C8D2DC"/>
+            <rect x="40" y="162" width="100" height="8" rx="4" fill="#C8D2DC"/>
+            <circle cx="200" cy="80" r="30" fill="#F5D9A8" stroke="#1B3550" stroke-width="3"/>
+            <path d="M188 74 q4 -6 8 0M204 74 q4 -6 8 0" stroke="#1B3550" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M192 92 q8 6 16 0" stroke="#1B3550" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M96 60 c-8 -14 -30 -8 -26 8 c3 12 26 24 26 24 s23 -12 26 -24 c4 -16 -18 -22 -26 -8Z" fill="#F27E63" stroke="#1B3550" stroke-width="3"/>
+          </svg>
+          <span class="game-badge">PLAY FREE</span>
+        </div>
+        <div class="game-body">
+          <h3>ときめきの放課後 DX</h3>
+          <p class="genre">恋愛シミュレーション / ブラウザゲーム</p>
+          <p>— 高校3年間で、だれかの「特別」になれ —。勉強・運動・おしゃれ・オタ活でじぶんを育てて、ときめき度を上げてデートに誘う放課後シミュレーション。セーブはブラウザ内、通信なしで安心して遊べます。</p>
+          <a class="play" href="https://frontiveja-sketch.github.io/Lovestory/" target="_blank" rel="noopener">▶ PLAY</a>
+        </div>
+      </article>
+      <article class="game-card reveal">
+        <div class="game-screen">
+          <svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="次回作アイデア募集のイメージ">
+            <rect width="320" height="200" fill="#EDF3E4"/>
+            <text x="160" y="118" text-anchor="middle" font-family="DotGothic16,monospace" font-size="64" fill="#1B3550">？</text>
+            <rect x="70" y="40" width="12" height="12" fill="#7ECBA1"/>
+            <rect x="240" y="60" width="14" height="14" fill="#F2B84B"/>
+            <rect x="220" y="150" width="10" height="10" fill="#7FB5DE"/>
+            <rect x="84" y="150" width="8" height="8" fill="#F27E63"/>
+          </svg>
+          <span class="game-badge idea">IDEA BOX</span>
+        </div>
+        <div class="game-body">
+          <h3>3作目はひみつ</h3>
+          <p class="genre">??? / 構想中</p>
+          <p>箱の中で、なにかが発酵しはじめています。くだらないアイデア、募集中。X（Twitter）でリプをくれたら本当に作るかもしれません。</p>
+          <a class="play disabled" href="#">？？？</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+<section id="blog">
+  <div class="container">
+    <div class="sec-head reveal">
+      <span class="en">BLOG</span>
+      <span class="jp">くだらない日記たち</span>
+    </div>
+    <article class="b-entry reveal">
+      <p class="date">2026.07.10</p>
+      <span class="face" aria-hidden="true">草</span>
+      <h3><a href="#">つじいちゃんに水をやりすぎて枯らした話（自作ゲームで）</a></h3>
+    </article>
+    <article class="b-entry reveal">
+      <p class="date">2026.07.02</p>
+      <span class="face" aria-hidden="true">箱</span>
+      <h3><a href="#">「pome-box」って何の箱？と聞かれて3秒固まった</a></h3>
+    </article>
+    <article class="b-entry reveal">
+      <p class="date">2026.06.25</p>
+      <span class="face" aria-hidden="true">夜</span>
+      <h3><a href="#">深夜2時のバグは、朝9時に見ると3分で直る法則</a></h3>
+    </article>
+    <article class="b-entry reveal">
+      <p class="date">2026.06.18</p>
+      <span class="face" aria-hidden="true">顔</span>
+      <h3><a href="#">写真から顔を切り抜く作業が一番ゲームっぽくない件</a></h3>
+    </article>
+    <article class="b-entry reveal">
+      <p class="date">2026.06.11</p>
+      <span class="face" aria-hidden="true">恋</span>
+      <h3><a href="#">恋愛シミュの選択肢、全部くだらなくていいのか問題</a></h3>
+    </article>
+    <p class="blog-note reveal">※ 記事タイトルは仮です。本物のくだらなさは、これから注入されます。</p>
+  </div>
+</section>
+<section class="about" id="about">
+  <div class="container about-box reveal">
+    <div class="face-big" aria-hidden="true">箱</div>
+    <h3>POME BOXの中の人</h3>
+    <p>昼はワインを運び、夜はゲームを植えて育てています。AIと一緒に、思いついたくだらないものを形にして、この箱に放り込んでいくサイトです。ゆるく見守ってください。</p>
+  </div>
+</section>
+<footer>
+  <p class="f-logo">POME <em>BOX</em></p>
+  <div class="f-links">
+    <a href="#">X (Twitter)</a>
+    <a href="#">note</a>
+    <a href="https://github.com/frontiveja-sketch/pome-box">GitHub</a>
+  </div>
+  <small>© 2026 POME BOX — Games &amp; Silly Blog</small>
+</footer>
+<script>
+(function(){
+  var cv = document.getElementById('playground');
+  var ctx = cv.getContext('2d');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W, H, dpr;
+  var COLORS = ['#7FB5DE','#F2B84B','#7ECBA1','#F27E63','#2E6FA3'];
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio||1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W*dpr; cv.height = H*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  var blocks = [];
+  for(var i=0;i<26;i++){
+    var s = 8 + Math.random()*16;
+    blocks.push({
+      x:Math.random(), y:Math.random()*0.9,
+      vx:(Math.random()-0.5)*0.05,
+      vy:(Math.random()-0.5)*0.05,
+      s:s, c:COLORS[i%COLORS.length],
+      rot:Math.random()*Math.PI, vr:(Math.random()-0.5)*0.5,
+      a:0.5+Math.random()*0.4
+    });
+  }
+  var sprouts = [];
+  for(var j=0;j<9;j++){
+    sprouts.push({u:0.06+j*0.11+ (Math.random()-0.5)*0.03, ph:Math.random()*Math.PI*2, h:26+Math.random()*30});
+  }
+  var start = performance.now(), running = true;
+  function frame(now){
+    var t = (now-start)/1000;
+    ctx.clearRect(0,0,W,H);
+    var g = ctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'rgba(191,227,245,.55)');
+    g.addColorStop(0.6,'rgba(251,250,244,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+    blocks.forEach(function(b){
+      b.x += b.vx/60; b.y += b.vy/60; b.rot += b.vr/60;
+      if(b.x<0||b.x>1) b.vx*=-1;
+      if(b.y<0||b.y>0.95) b.vy*=-1;
+      ctx.save();
+      ctx.translate(b.x*W, b.y*H);
+      ctx.rotate(b.rot);
+      ctx.globalAlpha = b.a;
+      ctx.fillStyle = b.c;
+      ctx.fillRect(-b.s/2, -b.s/2, b.s, b.s);
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+    sprouts.forEach(function(s){
+      var x = s.u*W;
+      var grow = 0.5 + 0.5*Math.sin(t*0.9 + s.ph);
+      var h = s.h * (0.4 + 0.6*grow);
+      ctx.fillStyle = '#5FAF7F';
+      ctx.fillRect(x-3, H-h, 6, h);
+      ctx.fillStyle = '#7ECBA1';
+      ctx.fillRect(x-11, H-h-4, 8, 8);
+      ctx.fillRect(x+3, H-h-10, 8, 8);
+      if(grow>0.86){
+        ctx.fillStyle = '#F2B84B';
+        ctx.fillRect(x-4, H-h-18, 8, 8);
+      }
+    });
+    if(running && !reduce) requestAnimationFrame(frame);
+  }
+  if(reduce){
+    frame(start);
+  }else{
+    requestAnimationFrame(frame);
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(e){
+        var vis = e[0].isIntersecting;
+        if(vis && !running){ running = true; requestAnimationFrame(frame); }
+        running = vis;
+      },{threshold:0}).observe(cv);
+    }
+  }
+})();
+(function(){
+  var hd = document.getElementById('hd');
+  window.addEventListener('scroll', function(){
+    hd.classList.toggle('scrolled', window.scrollY > 40);
+  }, {passive:true});
+})();
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var items = document.querySelectorAll('.reveal');
+  if(reduce || !('IntersectionObserver' in window)){
+    items.forEach(function(el){el.classList.add('is-in')});
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add('is-in'); io.unobserve(e.target); }
+    });
+  },{threshold:0.14});
+  items.forEach(function(el){io.observe(el)});
+})();
+</script>
+</body>
+</html>
