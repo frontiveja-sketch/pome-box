@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>シュポン！ 〜開栓ギリギリチャレンジ〜 | POME BOX</title>
+<meta name="description" content="押しっぱなしで圧力チャージ、離して開栓！100%を超えたら泡まみれ。ギリギリを攻めるチキンレースゲーム。">
+<meta name="theme-color" content="#2E6FA3">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23F2B84B'/%3E%3Ctext x='50' y='72' font-size='52' text-anchor='middle' fill='%231B3550'%3E泡%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FBFAF4;
+  --ink:#1B3550;
+  --ink-soft:#4C6379;
+  --ao:#2E6FA3;
+  --sora:#7FB5DE;
+  --gold:#F2B84B;
+  --coral:#F27E63;
+  --mint:#7ECBA1;
+  --pixel:"DotGothic16",monospace;
+  --sans:"Zen Kaku Gothic New",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  background:linear-gradient(180deg,#BFE3F5 0%,var(--cream) 55%);
+  color:var(--ink);
+  font-family:var(--sans);
+  user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;
+}
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:5}
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:6;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 16px;
+  font-family:var(--pixel);font-size:14px;letter-spacing:.08em;
+}
+#hud .score{font-size:18px}
+#hud .best{color:var(--ink-soft);font-size:12px}
+#mute{
+  border:2px solid var(--ink);border-radius:8px;background:#fff;
+  font-family:var(--pixel);font-size:13px;padding:4px 10px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);
+}
+#mute:active{transform:translate(2px,2px);box-shadow:none}
+#game{display:flex;align-items:center;gap:clamp(18px,6vw,48px)}
+#gaugeWrap{
+  width:34px;height:min(52vh,380px);
+  border:3px solid var(--ink);border-radius:12px;background:#fff;
+  position:relative;overflow:hidden;
+}
+#gaugeFill{
+  position:absolute;left:0;right:0;bottom:0;height:0%;
+  background:linear-gradient(180deg,var(--coral),var(--gold) 30%,var(--mint) 70%,var(--sora));
+  transition:none;
+}
+#gaugeWrap .limit{
+  position:absolute;left:0;right:0;top:0;height:10%;
+  border-bottom:3px dashed var(--coral);
+  background:rgba(242,126,99,.18);
+}
+#pct{
+  font-family:var(--pixel);
+  font-size:clamp(40px,9vw,72px);
+  min-width:3.2em;text-align:center;
+  line-height:1.1;
+}
+#pct small{display:block;font-size:14px;letter-spacing:.2em;color:var(--ink-soft)}
+#bottleBox{position:relative;width:clamp(110px,24vw,160px)}
+#bottleBox svg{width:100%;display:block}
+#msg{
+  margin-top:26px;text-align:center;z-index:6;
+  font-family:var(--pixel);font-size:clamp(15px,3.4vw,20px);letter-spacing:.1em;
+  min-height:3.4em;
+}
+#msg .sub{font-family:var(--sans);font-size:12.5px;color:var(--ink-soft);letter-spacing:.06em;font-weight:400}
+#bottles{
+  margin-top:10px;font-family:var(--pixel);font-size:15px;letter-spacing:.3em;color:var(--ink-soft);
+}
+.screen{
+  position:fixed;inset:0;z-index:10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px;
+  background:rgba(251,250,244,.94);
+}
+.screen h1{font-family:var(--pixel);font-size:clamp(34px,9vw,64px);letter-spacing:.04em;line-height:1.3;
+  text-shadow:4px 4px 0 var(--sora);}
+.screen h1 em{font-style:normal;color:var(--ao);text-shadow:4px 4px 0 var(--gold)}
+.screen p{font-size:13.5px;color:var(--ink-soft);margin-top:16px;line-height:2;max-width:32em}
+.screen .rank{font-family:var(--pixel);font-size:clamp(24px,6vw,40px);color:var(--ao);margin-top:8px}
+.screen .final{font-family:var(--pixel);font-size:clamp(20px,5vw,30px);margin-top:18px}
+.bigbtn{
+  margin-top:30px;
+  font-family:var(--pixel);font-size:19px;letter-spacing:.1em;
+  padding:16px 42px;border-radius:14px;
+  border:3px solid var(--ink);
+  background:var(--gold);color:var(--ink);
+  box-shadow:5px 5px 0 var(--ink);
+  cursor:pointer;
+}
+.bigbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.backlink{
+  margin-top:22px;display:inline-block;
+  font-family:var(--pixel);font-size:13px;letter-spacing:.14em;color:var(--ink-soft);
+  border-bottom:2px solid var(--sora);padding-bottom:3px;text-decoration:none;
+}
+.hidden{display:none!important}
+@keyframes shake1{0%,100%{transform:translate(0,0)}25%{transform:translate(1.5px,-1px)}75%{transform:translate(-1.5px,1px)}}
+@keyframes shake2{0%,100%{transform:translate(0,0)}20%{transform:translate(3px,-2px) rotate(.6deg)}60%{transform:translate(-3px,2px) rotate(-.6deg)}}
+@keyframes shake3{0%,100%{transform:translate(0,0)}15%{transform:translate(6px,-4px) rotate(1.4deg)}45%{transform:translate(-6px,4px) rotate(-1.4deg)}75%{transform:translate(4px,3px)}}
+.sh1{animation:shake1 .18s infinite}
+.sh2{animation:shake2 .14s infinite}
+.sh3{animation:shake3 .1s infinite}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div><span class="score">SCORE <span id="score">0</span></span><br><span class="best">BEST <span id="best">0</span></span></div>
+  <button id="mute" type="button">♪ ON</button>
+</div>
+
+<div id="stage">
+  <div id="game">
+    <div id="gaugeWrap">
+      <div class="limit"></div>
+      <div id="gaugeFill"></div>
+    </div>
+    <div id="bottleBox">
+      <svg viewBox="0 0 120 300" xmlns="http://www.w3.org/2000/svg" aria-label="スパークリングワインのボトル">
+        <g id="cork">
+          <rect x="50" y="8" width="20" height="26" rx="6" fill="#D9A05B" stroke="#1B3550" stroke-width="3"/>
+          <rect x="46" y="28" width="28" height="10" rx="4" fill="#B9834A" stroke="#1B3550" stroke-width="3"/>
+        </g>
+        <path d="M52 38 h16 v40 c0 14 22 26 22 58 v140 a12 12 0 0 1 -12 12 H42 a12 12 0 0 1 -12 -12 V136 c0 -32 22 -44 22 -58 Z"
+          fill="#1E5C46" stroke="#1B3550" stroke-width="4"/>
+        <path d="M56 42 h4 v36 c0 16 20 28 20 58 v130 h-8 V136 c0 -30 -16 -40 -16 -54 Z" fill="rgba(255,255,255,.28)"/>
+        <rect x="30" y="176" width="80" height="66" rx="8" fill="#FBFAF4" stroke="#1B3550" stroke-width="3"/>
+        <text x="70" y="204" text-anchor="middle" font-family="DotGothic16,monospace" font-size="17" fill="#1B3550">シュポン</text>
+        <text x="70" y="228" text-anchor="middle" font-family="DotGothic16,monospace" font-size="11" fill="#2E6FA3">POME BOX</text>
+        <rect x="46" y="66" width="28" height="12" fill="#F2B84B" stroke="#1B3550" stroke-width="3"/>
+      </svg>
+    </div>
+    <div id="pct">0<small>PRESSURE %</small></div>
+  </div>
+  <div id="msg"></div>
+  <div id="bottles"></div>
+</div>
+
+<canvas id="fx"></canvas>
+
+<div class="screen" id="titleScreen">
+  <h1>シュポン<em>！</em></h1>
+  <p>〜 開栓ギリギリチャレンジ 〜</p>
+  <p><b>押しっぱなし</b>で圧力チャージ、<b>離して</b>開栓！<br>
+  100%に近いほど高得点。でも超えたら泡まみれの<b>0点</b>。<br>
+  ボトル3本勝負、キミはどこまで我慢できる？</p>
+  <button class="bigbtn" id="startBtn" type="button">▶ はじめる</button>
+  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+</div>
+
+<div class="screen hidden" id="resultScreen">
+  <h1 id="resultTitle">結果発表</h1>
+  <p class="final">TOTAL <span id="finalScore">0</span> pt</p>
+  <p class="rank" id="rankText"></p>
+  <p id="resultComment"></p>
+  <button class="bigbtn" id="retryBtn" type="button">▶ もういっぽん</button>
+  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){return document.getElementById(id);};
+  var gaugeFill=$('gaugeFill'), pctEl=$('pct'), bottleBox=$('bottleBox'),
+      msg=$('msg'), bottlesEl=$('bottles'), scoreEl=$('score'), bestEl=$('best'),
+      titleScreen=$('titleScreen'), resultScreen=$('resultScreen'),
+      cork=$('cork'), fx=$('fx'), fctx=fx.getContext('2d');
+
+  function sizeFx(){ fx.width=innerWidth; fx.height=innerHeight; }
+  sizeFx(); addEventListener('resize', sizeFx);
+
+  var AC=null, muted=false;
+  function ac(){ if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)(); } if(AC.state==='suspended'){AC.resume();} return AC; }
+  function beep(freq,dur,type,vol){
+    if(muted) return;
+    try{
+      var a=ac(), o=a.createOscillator(), g=a.createGain();
+      o.type=type||'square'; o.frequency.value=freq;
+      g.gain.setValueAtTime(vol||0.06, a.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime+dur);
+      o.connect(g).connect(a.destination);
+      o.start(); o.stop(a.currentTime+dur);
+    }catch(e){}
+  }
+  function noiseBurst(dur,vol,fc){
+    if(muted) return;
+    try{
+      var a=ac(), len=a.sampleRate*dur, buf=a.createBuffer(1,len,a.sampleRate), d=buf.getChannelData(0);
+      for(var i=0;i<len;i++){ d[i]=(Math.random()*2-1)*(1-i/len); }
+      var s=a.createBufferSource(); s.buffer=buf;
+      var f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=fc||1800;
+      var g=a.createGain(); g.gain.value=vol||0.2;
+      s.connect(f).connect(g).connect(a.destination); s.start();
+    }catch(e){}
+  }
+  function popSound(){ noiseBurst(0.12,0.35,2500); beep(880,0.18,'sine',0.1); setTimeout(function(){beep(1320,0.22,'sine',0.08);},90); }
+  function failSound(){ noiseBurst(1.0,0.3,900); beep(160,0.5,'sawtooth',0.06); }
+  function perfectSound(){ [880,1108,1318,1760].forEach(function(f,i){ setTimeout(function(){beep(f,0.22,'square',0.07);}, i*110); }); }
+  $('mute').addEventListener('click',function(){ muted=!muted; this.textContent = muted?'♪ OFF':'♪ ON'; });
+
+  var BOTTLES=3;
+  var state='title';
+  var bottleIdx=0, total=0, pressure=0, lastT=0, stallT=0;
+  var pattern=null, raf=null;
+  var best=0;
+  try{ best=parseInt(localStorage.getItem('shupon_best')||'0',10)||0; }catch(e){}
+  bestEl.textContent=best;
+
+  var PATTERNS=[
+    {name:'素直なボトル',    base:26, accel:1.6, stall:0},
+    {name:'せっかちなボトル', base:22, accel:2.6, stall:0},
+    {name:'気まぐれなボトル', base:30, accel:1.8, stall:0.9}
+  ];
+
+  function setMsg(main,sub){ msg.innerHTML = main + (sub?'<br><span class="sub">'+sub+'</span>':''); }
+  function drawBottles(){
+    bottlesEl.textContent = 'BOTTLE ' + Math.min(bottleIdx+1,BOTTLES) + ' / ' + BOTTLES;
+  }
+
+  var parts=[];
+  function burst(x,y,n,colors,spread,gy){
+    for(var i=0;i<n;i++){
+      parts.push({
+        x:x,y:y,
+        vx:(Math.random()-0.5)*spread, vy:-Math.random()*spread*(0.7+Math.random()*0.6),
+        g:gy, r:2+Math.random()*5,
+        c:colors[i%colors.length], life:1
+      });
+    }
+  }
+  function foam(x,y){
+    for(var i=0;i<70;i++){
+      parts.push({
+        x:x+(Math.random()-0.5)*40, y:y,
+        vx:(Math.random()-0.5)*6, vy:-4-Math.random()*9,
+        g:0.25, r:4+Math.random()*9,
+        c:'rgba(255,255,255,.92)', life:1.4
+      });
+    }
+  }
+  function stepParts(dt){
+    fctx.clearRect(0,0,fx.width,fx.height);
+    parts = parts.filter(function(p){return p.life>0;});
+    parts.forEach(function(p){
+      p.x+=p.vx; p.y+=p.vy; p.vy+=p.g; p.life-=dt*0.9;
+      fctx.globalAlpha=Math.max(0,Math.min(1,p.life));
+      fctx.fillStyle=p.c;
+      fctx.beginPath(); fctx.arc(p.x,p.y,p.r,0,Math.PI*2); fctx.fill();
+    });
+    fctx.globalAlpha=1;
+  }
+
+  var lastTick=0;
+  function render(){
+    var p=Math.min(pressure,110);
+    gaugeFill.style.height=Math.min(p,100)+'%';
+    pctEl.firstChild.nodeValue=Math.floor(p);
+    bottleBox.className = p>92?'sh3' : p>75?'sh2' : p>50?'sh1' : '';
+    pctEl.style.color = p>90?'#F27E63' : p>70?'#C98A1F' : 'var(--ink)';
+  }
+
+  function startRun(){
+    total=0; bottleIdx=0; scoreEl.textContent='0';
+    titleScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    nextBottle();
+  }
+  function nextBottle(){
+    pattern=PATTERNS[bottleIdx%PATTERNS.length];
+    pressure=0; state='ready';
+    cork.style.transition='none';
+    cork.style.transform='';
+    cork.style.opacity='1';
+    render(); drawBottles();
+    setMsg(pattern.name+'、いきます', '画面を押しっぱなし → ちょうどいいところで離す！');
+  }
+  function beginHold(){
+    if(state!=='ready') return;
+    state='holding'; lastT=performance.now(); stallT=0;
+    loop();
+  }
+  function loop(){
+    if(state!=='holding') return;
+    var now=performance.now(), dt=(now-lastT)/1000; lastT=now;
+    if(pattern.stall && stallT<=0 && Math.random()<0.012){ stallT=0.35+Math.random()*0.4; }
+    if(stallT>0){ stallT-=dt; }
+    else{
+      var rate = pattern.base + pattern.accel*pressure + (Math.random()-0.3)*14;
+      pressure += rate*dt;
+    }
+    if(now-lastTick > Math.max(50, 340-pressure*3)){
+      lastTick=now;
+      beep(220+pressure*8, 0.05, 'square', 0.035);
+      if(pressure>85) beep(90,0.08,'sine',0.09);
+    }
+    render();
+    stepParts(dt);
+    if(pressure>=100){ explode(); return; }
+    raf=requestAnimationFrame(loop);
+  }
+  function endHold(){
+    if(state!=='holding') return;
+    cancelAnimationFrame(raf);
+    open(pressure);
+  }
+  function open(p){
+    state='opened';
+    var pts=0, mainMsg='', sub='';
+    var rect=bottleBox.getBoundingClientRect();
+    var cx=rect.left+rect.width/2, cy=rect.top+20;
+    if(p<50){
+      pts=0; mainMsg='……ポスッ。'; sub='気が早い！ 圧力50%未満は0点です';
+      beep(240,0.2,'sine',0.08);
+    }else{
+      pts=Math.round(Math.pow(p-50,2));
+      if(p>=98){ pts*=2; mainMsg='シュッッポーーーン！！ 神開栓！'; sub='98%超えボーナス ×2！ +'+pts+'pt'; perfectSound(); }
+      else if(p>=90){ mainMsg='シュポンッ！ いい音！'; sub='+'+pts+'pt'; popSound(); }
+      else{ mainMsg='シュポン。'; sub='+'+pts+'pt（まだ攻められたかも…）'; popSound(); }
+      cork.style.transition='transform .6s cubic-bezier(.2,.6,.3,1), opacity .6s';
+      cork.style.transform='translate(30px,-160px) rotate(50deg)';
+      cork.style.opacity='0';
+      burst(cx,cy, p>=98?80:40, ['#F2B84B','#FBFAF4','#7FB5DE','#F27E63'], p>=98?16:10, 0.3);
+    }
+    total+=pts; scoreEl.textContent=total;
+    setMsg(mainMsg, sub);
+    advance();
+  }
+  function explode(){
+    state='opened';
+    var rect=bottleBox.getBoundingClientRect();
+    foam(rect.left+rect.width/2, rect.top+30);
+    failSound();
+    render();
+    setMsg('ブシャアアアア！！ 泡まみれ！','100%を超えました……このボトルは0点');
+    advance();
+  }
+  function advance(){
+    bottleIdx++;
+    setTimeout(function(){
+      if(bottleIdx>=BOTTLES){ showResult(); }
+      else{ nextBottle(); }
+    }, 1900);
+    var t0=performance.now();
+    (function pl(){ var e=(performance.now()-t0)/1000; stepParts(1/60); if(e<2) requestAnimationFrame(pl); })();
+  }
+  function rankOf(s){
+    if(s>=9000) return ['開栓の神','その指、国宝級。生産者に自慢していいレベルです。'];
+    if(s>=6000) return ['ソムリエ・オブ・ドキドキ','ギリギリを見切る目、プロの所作です。'];
+    if(s>=3500) return ['開栓ソムリエ','いい度胸。泡があなたに敬意を払っています。'];
+    if(s>=1500) return ['見習いソムリエ','慎重派ですね。次は90%の壁を越えよう。'];
+    return ['泡まみれの人','大丈夫、拭けば乾きます。もういっぽん！'];
+  }
+  function showResult(){
+    state='result';
+    var r=rankOf(total);
+    $('finalScore').textContent=total;
+    $('rankText').textContent='「'+r[0]+'」';
+    $('resultComment').textContent=r[1];
+    if(total>best){
+      best=total;
+      try{ localStorage.setItem('shupon_best', String(best)); }catch(e){}
+      bestEl.textContent=best;
+      $('resultTitle').innerHTML='自己ベスト<em>更新！</em>';
+    }else{
+      $('resultTitle').textContent='結果発表';
+    }
+    resultScreen.classList.remove('hidden');
+  }
+
+  function down(e){
+    if(e.target.closest && e.target.closest('button, a')) return;
+    e.preventDefault();
+    ac();
+    beginHold();
+  }
+  function up(){ endHold(); }
+  addEventListener('pointerdown', down, {passive:false});
+  addEventListener('pointerup', up);
+  addEventListener('pointercancel', up);
+  addEventListener('keydown', function(e){ if(e.code==='Space'&&!e.repeat){ e.preventDefault(); ac(); beginHold(); } });
+  addEventListener('keyup', function(e){ if(e.code==='Space'){ e.preventDefault(); endHold(); } });
+
+  $('startBtn').addEventListener('click', function(){ ac(); startRun(); });
+  $('retryBtn').addEventListener('click', function(){ startRun(); });
+
+  render();
+  setMsg('','');
+})();
+</script>
+</body>
+</html>
