@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>シェケシェケ！ 〜ふりふりバーテンダー〜 | POME BOX</title>
+<meta name="description" content="スマホを振ってカクテルをシェイク！45秒で何杯さばける？カクテル図鑑を集めるふりふりバーテンダーラッシュ。">
+<meta name="theme-color" content="#2E6FA3">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237FB5DE'/%3E%3Ctext x='50' y='72' font-size='52' text-anchor='middle' fill='%231B3550'%3E🍸%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FBFAF4;
+  --ink:#1B3550;
+  --ink-soft:#4C6379;
+  --ao:#2E6FA3;
+  --sora:#7FB5DE;
+  --gold:#F2B84B;
+  --coral:#F27E63;
+  --mint:#7ECBA1;
+  --pixel:"DotGothic16",monospace;
+  --sans:"Zen Kaku Gothic New",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  background:linear-gradient(180deg,#1B3550 0%,#2E6FA3 55%,#7FB5DE 130%);
+  color:var(--cream);
+  font-family:var(--sans);
+  user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;
+}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:5}
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:6;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:14px 16px;
+  font-family:var(--pixel);letter-spacing:.06em;
+}
+#hud .score{font-size:19px}
+#hud .best{font-size:11px;color:rgba(251,250,244,.65)}
+#timer{
+  font-size:30px;
+  padding:2px 16px;border:3px solid var(--cream);border-radius:12px;
+  background:rgba(27,53,80,.4);
+}
+#timer.hurry{color:var(--coral);border-color:var(--coral);animation:blink .5s steps(2) infinite}
+@keyframes blink{50%{opacity:.4}}
+#mute{
+  border:2px solid var(--cream);border-radius:8px;background:transparent;color:var(--cream);
+  font-family:var(--pixel);font-size:12px;padding:4px 10px;cursor:pointer;
+}
+
+#stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+
+/* customer */
+#customer{display:flex;align-items:center;gap:12px;min-height:86px}
+#custFace{
+  width:64px;height:64px;border-radius:16px;background:var(--cream);
+  border:3px solid var(--ink);
+  display:grid;place-items:center;font-size:34px;
+}
+#bubble{
+  background:var(--cream);color:var(--ink);
+  border:3px solid var(--ink);border-radius:14px;
+  padding:10px 16px;position:relative;
+  font-size:13px;line-height:1.7;max-width:230px;
+}
+#bubble::before{
+  content:"";position:absolute;left:-12px;top:26px;
+  border:7px solid transparent;border-right-color:var(--ink);
+}
+#bubble b{font-family:var(--pixel);font-size:16px;letter-spacing:.04em}
+
+/* shaker */
+#shakerWrap{position:relative;width:min(46vw,190px);margin:6px 0}
+#shakerWrap svg{width:100%;display:block;transform-origin:50% 80%}
+#shakeCount{
+  position:absolute;inset:0;display:grid;place-items:center;
+  font-family:var(--pixel);font-size:clamp(30px,9vw,46px);
+  color:var(--cream);text-shadow:2px 2px 0 var(--ink);
+  pointer-events:none;
+}
+.wiggleL{animation:wl .12s}
+.wiggleR{animation:wr .12s}
+@keyframes wl{50%{transform:rotate(-13deg) translateY(-6px)}}
+@keyframes wr{50%{transform:rotate(13deg) translateY(-6px)}}
+
+#hint{
+  font-family:var(--pixel);font-size:14px;letter-spacing:.14em;
+  color:rgba(251,250,244,.85);text-align:center;min-height:1.6em;
+}
+#combo{
+  font-family:var(--pixel);font-size:17px;color:var(--gold);min-height:1.5em;
+  text-shadow:1px 1px 0 var(--ink);
+}
+
+/* screens */
+.screen{
+  position:fixed;inset:0;z-index:10;overflow-y:auto;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:28px 22px;
+  background:rgba(27,53,80,.92);backdrop-filter:blur(4px);
+}
+.screen h1{
+  font-family:var(--pixel);font-size:clamp(34px,9.5vw,62px);line-height:1.3;
+  text-shadow:4px 4px 0 var(--ao);
+}
+.screen h1 em{font-style:normal;color:var(--gold);text-shadow:4px 4px 0 var(--coral)}
+.screen p{font-size:13px;color:rgba(251,250,244,.85);margin-top:14px;line-height:2;max-width:32em}
+.bigbtn{
+  margin-top:26px;
+  font-family:var(--pixel);font-size:19px;letter-spacing:.08em;
+  padding:16px 42px;border-radius:14px;
+  border:3px solid var(--ink);
+  background:var(--gold);color:var(--ink);
+  box-shadow:5px 5px 0 var(--ink);
+  cursor:pointer;
+}
+.bigbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.backlink{
+  margin-top:20px;display:inline-block;
+  font-family:var(--pixel);font-size:13px;letter-spacing:.12em;color:rgba(251,250,244,.7);
+  border-bottom:2px solid var(--sora);padding-bottom:3px;text-decoration:none;
+}
+.final{font-family:var(--pixel);font-size:clamp(20px,5.5vw,30px);margin-top:16px}
+.rank{font-family:var(--pixel);font-size:clamp(22px,6vw,36px);color:var(--gold);margin-top:8px}
+
+/* 図鑑 */
+#dex{
+  margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));
+  gap:10px;width:100%;max-width:460px;
+}
+.dex-item{
+  border:2.5px solid var(--ink);border-radius:12px;background:var(--cream);color:var(--ink);
+  padding:10px 6px 8px;font-size:10.5px;line-height:1.6;
+}
+.dex-item .glass{font-size:24px}
+.dex-item .nm{font-family:var(--pixel);font-size:11px;display:block}
+.dex-item.locked{background:rgba(251,250,244,.25);color:rgba(251,250,244,.8);border-color:rgba(251,250,244,.4)}
+#dexNote{font-family:var(--pixel);font-size:12px;color:var(--sora);margin-top:12px}
+.newTag{color:var(--coral);font-family:var(--pixel);font-size:10px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<canvas id="fx"></canvas>
+
+<div id="hud">
+  <div><span class="score">SCORE <span id="score">0</span></span><br><span class="best">BEST <span id="best">0</span></span></div>
+  <div id="timer">45</div>
+  <button id="mute" type="button">♪ ON</button>
+</div>
+
+<div id="stage">
+  <div id="customer">
+    <div id="custFace">🙂</div>
+    <div id="bubble"><b id="orderName">…</b><br><span id="orderNote"></span></div>
+  </div>
+  <div id="shakerWrap">
+    <svg viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg" id="shakerSvg" aria-label="カクテルシェイカー">
+      <path d="M46 10 h28 v14 h-28 Z" fill="#8FA5B8" stroke="#1B3550" stroke-width="3"/>
+      <path d="M38 24 h44 l-4 14 h-36 Z" fill="#C7D3DE" stroke="#1B3550" stroke-width="3"/>
+      <path d="M34 38 h52 l-8 140 a12 12 0 0 1 -12 11 h-12 a12 12 0 0 1 -12 -11 Z" fill="#DCE7F0" stroke="#1B3550" stroke-width="3.5"/>
+      <clipPath id="body"><path d="M34 38 h52 l-8 140 a12 12 0 0 1 -12 11 h-12 a12 12 0 0 1 -12 -11 Z"/></clipPath>
+      <rect id="liquid" x="28" y="189" width="64" height="0" fill="#F2B84B" clip-path="url(#body)"/>
+      <g clip-path="url(#body)" fill="rgba(255,255,255,.75)">
+        <rect x="46" y="150" width="10" height="10" transform="rotate(12 51 155)"/>
+        <rect x="62" y="130" width="12" height="12" transform="rotate(-14 68 136)"/>
+      </g>
+    </svg>
+    <div id="shakeCount"></div>
+  </div>
+  <p id="combo"></p>
+  <p id="hint">スマホをふる！ or 連打！</p>
+</div>
+
+<!-- ===== title ===== -->
+<div class="screen" id="titleScreen">
+  <h1>シェケ<em>シェケ</em>！</h1>
+  <p>〜 ふりふりバーテンダー 〜</p>
+  <p><b>スマホをシャカシャカ振って</b>カクテルをシェイク！<br>
+  規定回数ふったら完成→すぐ次のお客さん。<br>
+  <b>45秒</b>で何杯さばける？ 作るほど<b>カクテル図鑑</b>が増えていく。<br>
+  （振れないときは連打でもOK）</p>
+  <button class="bigbtn" id="startBtn" type="button">▶ 開店する</button>
+  <div id="dex"></div>
+  <p id="dexNote"></p>
+  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+</div>
+
+<!-- ===== result ===== -->
+<div class="screen hidden" id="resultScreen">
+  <h1 id="resTitle">閉店〜！</h1>
+  <p class="final"><span id="served">0</span>杯 提供 / SCORE <span id="finalScore">0</span></p>
+  <p class="rank" id="rankText"></p>
+  <p id="resComment"></p>
+  <p id="unlockMsg" class="newTag"></p>
+  <button class="bigbtn" id="retryBtn" type="button">▶ もう一晩</button>
+  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id);};
+  var fx=$('fx'), fctx=fx.getContext('2d');
+  function sizeFx(){ fx.width=innerWidth; fx.height=innerHeight; }
+  sizeFx(); addEventListener('resize', sizeFx);
+
+  /* ---------- audio ---------- */
+  var AC=null, muted=false;
+  function ac(){ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();} if(AC.state==='suspended'){AC.resume();} return AC; }
+  function beep(f,d,t,v){ if(muted)return; try{var a=ac(),o=a.createOscillator(),g=a.createGain();o.type=t||'square';o.frequency.value=f;g.gain.setValueAtTime(v||0.06,a.currentTime);g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+d);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d);}catch(e){} }
+  function shk(){ if(muted)return; try{var a=ac(),len=a.sampleRate*0.06,b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);for(var i=0;i<len;i++){d[i]=(Math.random()*2-1)*(1-i/len);}var s=a.createBufferSource();s.buffer=b;var f=a.createBiquadFilter();f.type='highpass';f.frequency.value=3000;var g=a.createGain();g.gain.value=0.12;s.connect(f).connect(g).connect(a.destination);s.start();}catch(e){} }
+  function ding(){ beep(1318,0.12,'sine',0.1); setTimeout(function(){beep(1760,0.25,'sine',0.09);},90); }
+  function fanfare(){ [988,1175,1480,1976].forEach(function(f,i){ setTimeout(function(){beep(f,0.2,'square',0.06);}, i*100); }); }
+  $('mute').addEventListener('click',function(){ muted=!muted; this.textContent=muted?'♪ OFF':'♪ ON'; });
+
+  /* ---------- cocktails (unlock by lifetime serves) ---------- */
+  var COCKTAILS=[
+    {n:'ジントニック',    g:'🥃', c:'#DCE7F0', s:8,  unlock:0},
+    {n:'カシスオレンジ',  g:'🍹', c:'#F2B84B', s:10, unlock:0},
+    {n:'モヒート',        g:'🍸', c:'#7ECBA1', s:12, unlock:0},
+    {n:'ソルティドッグ',  g:'🥂', c:'#EAF2FB', s:12, unlock:5},
+    {n:'マルガリータ',    g:'🍸', c:'#EDF3E4', s:14, unlock:10},
+    {n:'ブルーハワイ',    g:'🍹', c:'#7FB5DE', s:16, unlock:18},
+    {n:'コスモポリタン',  g:'🍸', c:'#F27E63', s:16, unlock:28},
+    {n:'テキーラサンライズ',g:'🍹', c:'#F2996B', s:18, unlock:40},
+    {n:'ミッドナイトブルー',g:'🍸', c:'#2E6FA3', s:20, unlock:55},
+    {n:'まぼろしの一杯',  g:'✨', c:'#F5E6A8', s:26, unlock:80}
+  ];
+  var FACES=['🙂','😀','🥰','🤠','🧐','😎','🥺','😾','👻','🤖','💂','🦉'];
+  var lifetime=0, best=0;
+  try{
+    lifetime=parseInt(localStorage.getItem('shake_total')||'0',10)||0;
+    best=parseInt(localStorage.getItem('shake_best')||'0',10)||0;
+  }catch(e){}
+  $('best').textContent=best;
+  function unlockedList(){ return COCKTAILS.filter(function(c){return lifetime>=c.unlock;}); }
+  function renderDex(){
+    var d=$('dex'); d.innerHTML='';
+    COCKTAILS.forEach(function(c){
+      var el=document.createElement('div');
+      var open=lifetime>=c.unlock;
+      el.className='dex-item'+(open?'':' locked');
+      el.innerHTML= open
+        ? '<span class="glass">'+c.g+'</span><span class="nm">'+c.n+'</span>シェイク'+c.s+'回'
+        : '<span class="glass">❓</span><span class="nm">？？？</span>累計'+c.unlock+'杯で解禁';
+      d.appendChild(el);
+    });
+    var next=COCKTAILS.find(function(c){return lifetime<c.unlock;});
+    $('dexNote').textContent = next
+      ? '累計 '+lifetime+' 杯 ／ 次の解禁まであと '+(next.unlock-lifetime)+' 杯！'
+      : '累計 '+lifetime+' 杯 ／ 全カクテル制覇！ すごい！';
+  }
+  renderDex();
+
+  /* ---------- particles ---------- */
+  var parts=[];
+  function splash(x,y,color,n){
+    for(var i=0;i<n;i++){
+      parts.push({x:x,y:y,vx:(Math.random()-0.5)*9,vy:-3-Math.random()*7,g:0.3,r:2+Math.random()*4,c:color,life:1});
+    }
+  }
+  (function pl(){
+    fctx.clearRect(0,0,fx.width,fx.height);
+    parts=parts.filter(function(p){return p.life>0;});
+    parts.forEach(function(p){
+      p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.life-=0.02;
+      fctx.globalAlpha=Math.max(0,p.life);
+      fctx.fillStyle=p.c;
+      fctx.beginPath();fctx.arc(p.x,p.y,p.r,0,Math.PI*2);fctx.fill();
+    });
+    fctx.globalAlpha=1;
+    requestAnimationFrame(pl);
+  })();
+
+  /* ---------- game state ---------- */
+  var TIME=45;
+  var state='title', timeLeft=TIME, score=0, served=0, combo=0;
+  var order=null, need=0, done=0, orderStart=0;
+  var timerId=null, wig=false;
+
+  function setOrder(){
+    var pool=unlockedList();
+    order=pool[Math.floor(Math.random()*pool.length)];
+    need=order.s; done=0; orderStart=performance.now();
+    $('custFace').textContent=FACES[Math.floor(Math.random()*FACES.length)];
+    $('orderName').textContent=order.n+' '+order.g;
+    $('orderNote').textContent='シェイク '+need+' 回で！';
+    $('liquid').setAttribute('fill', order.c);
+    updateShaker();
+  }
+  function updateShaker(){
+    $('shakeCount').textContent=(need-done);
+    var h=151*(done/need);
+    $('liquid').setAttribute('height', h);
+    $('liquid').setAttribute('y', 189-h);
+  }
+  function shake(){
+    if(state!=='play') return;
+    done++;
+    shk();
+    var sv=$('shakerSvg');
+    sv.classList.remove('wiggleL','wiggleR');
+    void sv.offsetWidth;
+    sv.classList.add(wig?'wiggleL':'wiggleR');
+    wig=!wig;
+    if(done>=need){ serve(); } else { updateShaker(); }
+  }
+  function serve(){
+    served++; lifetime++;
+    var sec=(performance.now()-orderStart)/1000;
+    var pts=100;
+    var fast=sec<need*0.22;
+    if(fast){ pts+=50; combo++; } else { combo=0; }
+    if(combo>=2){ pts+=combo*25; }
+    score+=pts;
+    $('score').textContent=score;
+    $('combo').textContent = fast ? ('⚡はやい！ +'+pts+(combo>=2?'  '+combo+' COMBO!':'')) : ('+'+pts);
+    ding();
+    var r=$('shakerWrap').getBoundingClientRect();
+    splash(r.left+r.width/2, r.top+30, order.c, 26);
+    $('custFace').textContent='😆';
+    setTimeout(setOrder, 260);
+  }
+
+  function startRun(){
+    state='play'; timeLeft=TIME; score=0; served=0; combo=0;
+    $('score').textContent='0'; $('combo').textContent='';
+    $('timer').textContent=timeLeft; $('timer').classList.remove('hurry');
+    $('titleScreen').classList.add('hidden');
+    $('resultScreen').classList.add('hidden');
+    setOrder();
+    clearInterval(timerId);
+    timerId=setInterval(function(){
+      timeLeft--;
+      $('timer').textContent=timeLeft;
+      if(timeLeft<=10){ $('timer').classList.add('hurry'); beep(660,0.06,'square',0.05); }
+      if(timeLeft<=0){ endRun(); }
+    },1000);
+  }
+  function rankOf(n){
+    if(n>=22) return ['伝説のシェイカー','その腕、もはや営業許可がいるレベル。'];
+    if(n>=16) return ['カリスマバーテンダー','店の外まで行列ができています。'];
+    if(n>=11) return ['売れっ子バーテンダー','常連さんがつき始めました。'];
+    if(n>=6)  return ['見習いバーテンダー','いい振りです。明日も出勤よろしく。'];
+    return ['腕ならし中','まずは肩のストレッチから！'];
+  }
+  function endRun(){
+    clearInterval(timerId);
+    state='result';
+    fanfare();
+    var before=COCKTAILS.filter(function(c){return (lifetime-served)>=c.unlock;}).length;
+    var after=unlockedList().length;
+    try{
+      localStorage.setItem('shake_total', String(lifetime));
+      if(score>best){ best=score; localStorage.setItem('shake_best', String(best)); $('resTitle').innerHTML='自己ベスト<em>更新！</em>'; }
+      else{ $('resTitle').textContent='閉店〜！'; }
+    }catch(e){}
+    $('best').textContent=best;
+    $('served').textContent=served;
+    $('finalScore').textContent=score;
+    var r=rankOf(served);
+    $('rankText').textContent='「'+r[0]+'」';
+    $('resComment').textContent=r[1];
+    $('unlockMsg').textContent = after>before ? '🎉 新しいカクテルが図鑑に解禁されました！' : '';
+    renderDex();
+    $('resultScreen').classList.remove('hidden');
+  }
+
+  /* ---------- input: device motion + tap + key ---------- */
+  var lastMag=0, lastShakeT=0;
+  function onMotion(e){
+    var a=e.accelerationIncludingGravity;
+    if(!a) return;
+    var mag=Math.sqrt((a.x||0)*(a.x||0)+(a.y||0)*(a.y||0)+(a.z||0)*(a.z||0));
+    var now=performance.now();
+    if(Math.abs(mag-lastMag)>11 && now-lastShakeT>90){
+      lastShakeT=now;
+      shake();
+    }
+    lastMag=mag;
+  }
+  function enableMotion(){
+    if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){
+      DeviceMotionEvent.requestPermission().then(function(res){
+        if(res==='granted'){ addEventListener('devicemotion', onMotion); }
+      }).catch(function(){});
+    }else if(typeof DeviceMotionEvent!=='undefined'){
+      addEventListener('devicemotion', onMotion);
+    }
+  }
+  addEventListener('pointerdown', function(e){
+    if(e.target.closest && e.target.closest('button, a')) return;
+    if(state==='play'){ e.preventDefault(); shake(); }
+  }, {passive:false});
+  addEventListener('keydown', function(e){
+    if(e.code==='Space' && state==='play'){ e.preventDefault(); shake(); }
+  });
+
+  $('startBtn').addEventListener('click', function(){ ac(); enableMotion(); startRun(); });
+  $('retryBtn').addEventListener('click', function(){ ac(); startRun(); });
+})();
+</script>
+</body>
+</html>
