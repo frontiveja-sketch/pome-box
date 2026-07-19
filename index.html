@@ -168,11 +168,12 @@ section{padding:clamp(80px,12vh,130px) 0}
   display:grid;grid-template-columns:110px 44px 1fr;gap:clamp(14px,3vw,32px);
   align-items:center;
   padding:22px 4px;
-  border-bottom:2px dashed var(--line);
+  cursor:pointer;
   transition:background .4s,transform .4s;
   border-radius:10px;
 }
-.b-entry:first-of-type{border-top:2px dashed var(--line)}
+.b-post{border-bottom:2px dashed var(--line)}
+.b-post:first-of-type{border-top:2px dashed var(--line)}
 .b-entry:hover{background:rgba(127,181,222,.14);transform:translateX(6px)}
 .b-entry .date{font-family:var(--latin);font-weight:600;font-size:11.5px;letter-spacing:.16em;color:var(--ink-soft)}
 .b-entry .face{
@@ -185,10 +186,17 @@ section{padding:clamp(80px,12vh,130px) 0}
 .b-entry h3{font-size:clamp(14.5px,1.8vw,17px);letter-spacing:.06em;line-height:1.85;font-weight:500}
 .b-entry:hover h3{color:var(--ao)}
 @media(max-width:600px){.b-entry{grid-template-columns:44px 1fr}.b-entry .date{grid-column:2;order:3;margin-top:-6px}}
-.blog-note{
-  margin-top:34px;text-align:center;
-  font-size:12.5px;color:var(--ink-soft);letter-spacing:.12em;
+.b-entry h3::after{content:" ▼";font-size:10px;color:var(--sora)}
+.b-post.open .b-entry h3::after{content:" ▲";color:var(--gold)}
+.b-body{
+  display:none;
+  padding:2px 8px 26px calc(110px + 44px + clamp(14px,3vw,32px)*2);
+  font-size:13px;line-height:2.15;color:var(--ink-soft);
 }
+.b-body p{margin-bottom:1.5em}
+.b-body p:last-child{margin-bottom:0}
+.b-post.open .b-body{display:block}
+@media(max-width:600px){.b-body{padding:0 6px 24px}}
 
 /* ================= about ================= */
 .about{background:linear-gradient(var(--cream),var(--chalk) 15%,var(--chalk) 85%,var(--cream))}
@@ -414,33 +422,78 @@ footer small{display:block;font-family:var(--latin);font-size:9.5px;letter-spaci
       <span class="jp">くだらない日記たち</span>
     </div>
 
-    <article class="b-entry reveal">
-      <p class="date">2026.07.10</p>
-      <span class="face" aria-hidden="true">草</span>
-      <h3><a href="#">つじいちゃんに水をやりすぎて枯らした話（自作ゲームで）</a></h3>
+    <article class="b-post reveal">
+      <div class="b-entry" role="button" tabindex="0" aria-expanded="false">
+        <p class="date">2026.07.10</p>
+        <span class="face" aria-hidden="true">振</span>
+        <h3>開発の最終工程は、真顔でスマホを振ることだった</h3>
+      </div>
+      <div class="b-body">
+        <p>「シェケシェケ！」というゲームを作った。スマホを振ってカクテルをシェイクするゲームである。つまりテストプレイとは、スマホを振ることである。</p>
+        <p>リビングで、真顔で、45秒間スマホを振る。判定が甘ければ数値を直して、また振る。この繰り返し。気分はバーテンダーではなく、品質管理部です。</p>
+        <p>家族の視線に気づいたのは3セット目だった。何も言われなかった。何も言われないのが、一番くる。</p>
+        <p>「ゲームのテストです」と先に宣言すればよかったのだが、振っている最中に言うと言い訳にしか聞こえない気がして、黙って振り続けた。今思えば悪手だった。</p>
+        <p>分かったことがひとつ。このゲーム、電車ではテストできない。通勤時間に開発が進まない。仕様です。</p>
+      </div>
     </article>
-    <article class="b-entry reveal">
-      <p class="date">2026.07.02</p>
-      <span class="face" aria-hidden="true">箱</span>
-      <h3><a href="#">「pome-box」って何の箱？と聞かれて3秒固まった</a></h3>
+    <article class="b-post reveal">
+      <div class="b-entry" role="button" tabindex="0" aria-expanded="false">
+        <p class="date">2026.07.02</p>
+        <span class="face" aria-hidden="true">箱</span>
+        <h3>「pome-box」って何の箱？と聞かれて3秒固まった</h3>
+      </div>
+      <div class="b-body">
+        <p>サイトのURLを人に教えたら「pome-boxって何？」と聞かれた。</p>
+        <p>3秒固まった。</p>
+        <p>その3秒間、脳内では緊急会議が開かれていた。「pomeはリンゴとか梨とかの果実の分類名で、ワインの仕事をしてるから果実で、箱は……」議長、それ今考えましたよね。「ポメラニアンでは？」犬は飼っていない。「POMEは何かの頭文字では？」何の？</p>
+        <p>会議は結論が出ないまま散会し、私は「ゲームとか入れる箱です」と答えた。</p>
+        <p>嘘ではない。名前というのは、中身が先で意味は後からやってくる。この箱も、入れているうちに何の箱か決まっていくのだと思う。</p>
+        <p>現在の中身：ゲーム4本と、この日記。</p>
+      </div>
     </article>
-    <article class="b-entry reveal">
-      <p class="date">2026.06.25</p>
-      <span class="face" aria-hidden="true">夜</span>
-      <h3><a href="#">深夜2時のバグは、朝9時に見ると3分で直る法則</a></h3>
+    <article class="b-post reveal">
+      <div class="b-entry" role="button" tabindex="0" aria-expanded="false">
+        <p class="date">2026.06.25</p>
+        <span class="face" aria-hidden="true">夜</span>
+        <h3>深夜2時のバグは、朝9時に見ると3分で直る法則</h3>
+      </div>
+      <div class="b-body">
+        <p>深夜2時、ゲームが動かなくなった。</p>
+        <p>私は真剣に考えた。ブラウザのバグかもしれない。いや、もっと根の深い、JavaScriptという言語そのものの欠陥かもしれない。あるいはこのノートPCが寿命なのでは。買い替えの検索まではした。</p>
+        <p>寝た。</p>
+        <p>朝9時に見たら、カッコがひとつ多かった。3分で直った。買い替え検討まで進んだこのPCには、本当に申し訳ないことをした。</p>
+        <p>深夜の自分は、疑う順番がおかしい。世界を疑う前に、昨日の自分を疑うべきなのだ。犯人はだいたいそこにいる。</p>
+        <p>なお今夜も深夜に作業する予定です。学ばないのも仕様。</p>
+      </div>
     </article>
-    <article class="b-entry reveal">
-      <p class="date">2026.06.18</p>
-      <span class="face" aria-hidden="true">顔</span>
-      <h3><a href="#">写真から顔を切り抜く作業が一番ゲームっぽくない件</a></h3>
+    <article class="b-post reveal">
+      <div class="b-entry" role="button" tabindex="0" aria-expanded="false">
+        <p class="date">2026.06.18</p>
+        <span class="face" aria-hidden="true">顔</span>
+        <h3>写真から顔を切り抜く作業が一番ゲームっぽくない件</h3>
+      </div>
+      <div class="b-body">
+        <p>「ゲーム作ってる」と言うと、ちょっとかっこいい響きがある。</p>
+        <p>実態を報告したい。昨夜の私は、写真から顔を丸く切り抜く作業を延々とやっていた。無言で。指先で輪郭をなぞり、はみ出し、戻り、またなぞる。BGMもなかった。あったのは集中と、深夜の生活音だけである。</p>
+        <p>これはゲーム制作なのか。内職ではないのか。</p>
+        <p>でも不思議なもので、切り抜いた顔がゲームの中で動いた瞬間、全部チャラになる。あの地味な1時間が「開発」に昇格する。</p>
+        <p>ゲーム制作の9割は地味な作業で、残りの1割が、その9割を正当化してくれる。この比率で今日もやっています。</p>
+      </div>
     </article>
-    <article class="b-entry reveal">
-      <p class="date">2026.06.11</p>
-      <span class="face" aria-hidden="true">恋</span>
-      <h3><a href="#">恋愛シミュの選択肢、全部くだらなくていいのか問題</a></h3>
+    <article class="b-post reveal">
+      <div class="b-entry" role="button" tabindex="0" aria-expanded="false">
+        <p class="date">2026.06.11</p>
+        <span class="face" aria-hidden="true">恋</span>
+        <h3>恋愛シミュの選択肢、全部くだらなくていいのか問題</h3>
+      </div>
+      <div class="b-body">
+        <p>恋愛シミュレーションを作っていて、手が止まった。選択肢である。</p>
+        <p>真面目な選択肢を書くと、嘘くさい。「君のことをもっと知りたい」——誰が言うんだ、これを。少なくとも私の高校時代に、こんなことを言う人類はいなかった。</p>
+        <p>一方、くだらない選択肢はすらすら書ける。書きながら、それを放課後に語る人物の顔が浮かぶ。浮かんでしまう。</p>
+        <p>問題は、テストプレイで選ばれるのがくだらない方だということだ。人は選択肢を与えられると、正しい方ではなく面白い方を選ぶ。</p>
+        <p>人生もそうかもしれない、と書きかけてやめた。この日記はそういう日記ではない。</p>
+      </div>
     </article>
-
-    <p class="blog-note reveal">※ 記事タイトルは仮です。本物のくだらなさは、これから注入されます。</p>
   </div>
 </section>
 
@@ -583,6 +636,19 @@ footer small{display:block;font-family:var(--latin);font-size:9.5px;letter-spaci
     });
   },{threshold:0.14});
   items.forEach(function(el){io.observe(el)});
+})();
+(function(){
+  document.querySelectorAll('.b-entry').forEach(function(el){
+    function toggle(){
+      var post=el.parentElement;
+      var open=post.classList.toggle('open');
+      el.setAttribute('aria-expanded', open?'true':'false');
+    }
+    el.addEventListener('click', toggle);
+    el.addEventListener('keydown', function(e){
+      if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); }
+    });
+  });
 })();
 </script>
 </body>
