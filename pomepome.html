@@ -98,6 +98,8 @@ body{
 @media(min-width:760px){#ctrl{display:none}}
 .hint{font-size:10.5px;color:var(--ink-soft);text-align:center;letter-spacing:.06em}
 @media(max-width:759px){.hint{display:none}}
+.hintm{display:none;font-size:10.5px;color:var(--ink-soft);text-align:center;letter-spacing:.06em}
+@media(max-width:759px){.hintm{display:block}}
 
 .screen{
   position:fixed;inset:0;z-index:10;
@@ -154,6 +156,7 @@ body{
     <button class="cbtn" id="btnRt" type="button">▶</button>
   </div>
   <p class="hint">← → 移動 ／ ↑ or Z 回転 ／ ↓ 高速落下 ／ スペース 一気に落とす</p>
+  <p class="hintm">↻ボタンか、盤面タップで回転！</p>
 </div>
 
 <div class="screen" id="titleScreen">
@@ -268,14 +271,31 @@ body{
   });
   addEventListener('keyup',function(e){ if(e.code==='ArrowDown'){ softDrop=false; } });
   function bindBtn(id,down,up){
-    var el=$(id);
-    el.addEventListener('pointerdown',function(e){ e.preventDefault(); ac(); down(); });
-    if(up){ el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('pointerleave',up); }
+    var el=$(id), last=0;
+    function fireDown(e){
+      if(e && e.cancelable) e.preventDefault();
+      var n=Date.now(); if(n-last<80) return; last=n;
+      ac(); down();
+    }
+    el.addEventListener('pointerdown',fireDown);
+    el.addEventListener('touchstart',fireDown,{passive:false});
+    el.addEventListener('mousedown',fireDown);
+    if(up){ el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('pointerleave',up); el.addEventListener('touchend',up,{passive:true}); }
   }
   bindBtn('btnL',function(){move(-1);});
   bindBtn('btnRt',function(){move(1);});
   bindBtn('btnR',function(){rotate();});
   bindBtn('btnD',function(){softDrop=true;},function(){softDrop=false;});
+  (function(){
+    var bw=document.getElementById('boardWrap'), last=0;
+    function tapRotate(e){
+      if(e && e.cancelable) e.preventDefault();
+      var n=Date.now(); if(n-last<80) return; last=n;
+      ac(); rotate();
+    }
+    bw.addEventListener('pointerdown',tapRotate);
+    bw.addEventListener('touchstart',tapRotate,{passive:false});
+  })();
 
   function lockPair(){
     var s=satPos(cur);
@@ -601,6 +621,7 @@ body{
     bgmTimer=setInterval(bgmTick,50);
   }
 
+  window.__pomeDebug=function(){ return {phase:phase, cur:cur?JSON.parse(JSON.stringify(cur)):null, rot:cur?cur.rot:-1}; };
   board=newBoard();
   phase='title';
   requestAnimationFrame(function(n){ lastT=n; requestAnimationFrame(loop); });
