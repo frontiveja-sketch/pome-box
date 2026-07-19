@@ -189,6 +189,19 @@ body{
 
   var AC=null, muted=false;
   function ac(){ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();} if(AC.state==='suspended'){AC.resume();} return AC; }
+  var __unmuted=false;
+  function unlockAudio(){
+    if(__unmuted) return; __unmuted=true;
+    try{
+      var el=document.createElement('audio');
+      el.setAttribute('playsinline','');
+      el.loop=true;
+      el.volume=0.01;
+      el.src='data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      var pr=el.play(); if(pr&&pr.catch){ pr.catch(function(){ __unmuted=false; }); }
+      document.body.appendChild(el);
+    }catch(e){ __unmuted=false; }
+  }
   function beep(f,d,t,v){ if(muted)return; try{var a=ac(),o=a.createOscillator(),g=a.createGain();o.type=t||'square';o.frequency.value=f;g.gain.setValueAtTime(v||0.05,a.currentTime);g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+d);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d);}catch(e){} }
   function popSound(chain){
     if(muted)return;
@@ -275,7 +288,7 @@ body{
     function fireDown(e){
       if(e && e.cancelable) e.preventDefault();
       var n=Date.now(); if(n-last<80) return; last=n;
-      ac(); down();
+      ac(); unlockAudio(); down();
     }
     el.addEventListener('pointerdown',fireDown);
     el.addEventListener('touchstart',fireDown,{passive:false});
@@ -291,7 +304,7 @@ body{
     function tapRotate(e){
       if(e && e.cancelable) e.preventDefault();
       var n=Date.now(); if(n-last<80) return; last=n;
-      ac(); rotate();
+      ac(); unlockAudio(); rotate();
     }
     bw.addEventListener('pointerdown',tapRotate);
     bw.addEventListener('touchstart',tapRotate,{passive:false});
@@ -420,8 +433,8 @@ body{
     nextPair=newPair();
     spawn();
   }
-  $('startBtn').addEventListener('click',function(){ ac(); startMusic(); startRun(); });
-  $('retryBtn').addEventListener('click',function(){ startMusic(); startRun(); });
+  $('startBtn').addEventListener('click',function(){ ac(); unlockAudio(); startMusic(); startRun(); });
+  $('retryBtn').addEventListener('click',function(){ ac(); unlockAudio(); startMusic(); startRun(); });
 
   var lastT=performance.now();
   function loop(now){
