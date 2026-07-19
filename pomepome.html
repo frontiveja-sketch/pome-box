@@ -400,8 +400,8 @@ body{
     nextPair=newPair();
     spawn();
   }
-  $('startBtn').addEventListener('click',function(){ ac(); startRun(); });
-  $('retryBtn').addEventListener('click',function(){ startRun(); });
+  $('startBtn').addEventListener('click',function(){ ac(); startMusic(); startRun(); });
+  $('retryBtn').addEventListener('click',function(){ startMusic(); startRun(); });
 
   var lastT=performance.now();
   function loop(now){
@@ -547,6 +547,61 @@ body{
     drawPom(nctx,6,46,48,nextPair.c1,0,false);
   }
 
+  /* BGM: self-made chiptune loop (no external assets, license-free) */
+  var bgmNext=0, bgmStep=0, bgmTimer=null;
+  function nf(n){ return 440*Math.pow(2,(n-69)/12); }
+  var BASS_ROOT=[48,43,45,41];
+  var MELO=[
+    [72,0,0,74, 76,0,0,74, 72,0,74,0, 76,0,0,0],
+    [74,0,0,76, 79,0,0,76, 74,0,76,0, 79,0,0,0],
+    [81,0,79,0, 76,0,79,0, 81,0,79,76, 74,0,0,0],
+    [77,0,76,0, 74,0,76,0, 72,0,0,0, 67,0,0,0]
+  ];
+  var STEP_DUR=60/132/4;
+  function schedNote(freq,when,dur,type,vol){
+    if(muted) return;
+    try{
+      var a=ac(), o=a.createOscillator(), g=a.createGain();
+      o.type=type; o.frequency.value=freq;
+      g.gain.setValueAtTime(vol,when);
+      g.gain.exponentialRampToValueAtTime(0.0001,when+dur);
+      o.connect(g).connect(a.destination);
+      o.start(when); o.stop(when+dur);
+    }catch(e){}
+  }
+  function schedHat(when){
+    if(muted) return;
+    try{
+      var a=ac(), len=Math.floor(a.sampleRate*0.03), buf=a.createBuffer(1,len,a.sampleRate), d=buf.getChannelData(0);
+      for(var i=0;i<len;i++){ d[i]=(Math.random()*2-1)*(1-i/len); }
+      var s=a.createBufferSource(); s.buffer=buf;
+      var f=a.createBiquadFilter(); f.type='highpass'; f.frequency.value=7000;
+      var g=a.createGain(); g.gain.value=0.03;
+      s.connect(f).connect(g).connect(a.destination); s.start(when);
+    }catch(e){}
+  }
+  function bgmTick(){
+    var a=ac();
+    while(bgmNext < a.currentTime + 0.18){
+      var bar=Math.floor(bgmStep/16)%4, st=bgmStep%16;
+      var m=MELO[bar][st];
+      if(m) schedNote(nf(m), bgmNext, STEP_DUR*1.6, 'square', 0.028);
+      if(st%4===0){
+        var root=BASS_ROOT[bar];
+        schedNote(nf(st%8===0?root:root+7), bgmNext, STEP_DUR*2.2, 'triangle', 0.05);
+      }
+      if(st%2===0) schedHat(bgmNext);
+      bgmNext+=STEP_DUR; bgmStep++;
+    }
+  }
+  function startMusic(){
+    if(bgmTimer) return;
+    var a=ac();
+    bgmNext=a.currentTime+0.1; bgmStep=0;
+    bgmTimer=setInterval(bgmTick,50);
+  }
+
+  board=newBoard();
   phase='title';
   requestAnimationFrame(function(n){ lastT=n; requestAnimationFrame(loop); });
 })();
