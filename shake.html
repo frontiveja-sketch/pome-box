@@ -214,6 +214,19 @@ body{
   /* ---------- audio ---------- */
   var AC=null, muted=false;
   function ac(){ if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();} if(AC.state==='suspended'){AC.resume();} return AC; }
+  var __unmuted=false;
+  function unlockAudio(){
+    if(__unmuted) return; __unmuted=true;
+    try{
+      var el=document.createElement('audio');
+      el.setAttribute('playsinline','');
+      el.loop=true;
+      el.volume=0.01;
+      el.src='data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      var pr=el.play(); if(pr&&pr.catch){ pr.catch(function(){ __unmuted=false; }); }
+      document.body.appendChild(el);
+    }catch(e){ __unmuted=false; }
+  }
   function beep(f,d,t,v){ if(muted)return; try{var a=ac(),o=a.createOscillator(),g=a.createGain();o.type=t||'square';o.frequency.value=f;g.gain.setValueAtTime(v||0.06,a.currentTime);g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+d);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d);}catch(e){} }
   function shk(){ if(muted)return; try{var a=ac(),len=a.sampleRate*0.06,b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);for(var i=0;i<len;i++){d[i]=(Math.random()*2-1)*(1-i/len);}var s=a.createBufferSource();s.buffer=b;var f=a.createBiquadFilter();f.type='highpass';f.frequency.value=3000;var g=a.createGain();g.gain.value=0.12;s.connect(f).connect(g).connect(a.destination);s.start();}catch(e){} }
   function ding(){ beep(1318,0.12,'sine',0.1); setTimeout(function(){beep(1760,0.25,'sine',0.09);},90); }
@@ -403,8 +416,8 @@ body{
     if(e.code==='Space' && state==='play'){ e.preventDefault(); shake(); }
   });
 
-  $('startBtn').addEventListener('click', function(){ ac(); enableMotion(); startRun(); });
-  $('retryBtn').addEventListener('click', function(){ ac(); startRun(); });
+  $('startBtn').addEventListener('click', function(){ ac(); unlockAudio(); enableMotion(); startRun(); });
+  $('retryBtn').addEventListener('click', function(){ ac(); unlockAudio(); startRun(); });
 })();
 </script>
 </body>
