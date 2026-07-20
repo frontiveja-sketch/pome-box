@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="i18n-title-en" content="Shupon! — POME BOX">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>シュポン！ 〜開栓ギリギリチャレンジ〜 | POME BOX</title>
 <meta name="description" content="押しっぱなしで圧力チャージ、離して開栓！100%を超えたら泡まみれ。ギリギリを攻めるチキンレースゲーム。">
@@ -122,6 +123,7 @@ body{
 
 <div id="hud">
   <div><span class="score">SCORE <span id="score">0</span></span><br><span class="best">BEST <span id="best">0</span></span></div>
+  <span id="langMount"></span>
   <button id="mute" type="button">♪ ON</button>
 </div>
 
@@ -155,13 +157,13 @@ body{
 <canvas id="fx"></canvas>
 
 <div class="screen" id="titleScreen">
-  <h1>シュポン<em>！</em></h1>
-  <p>〜 開栓ギリギリチャレンジ 〜</p>
-  <p><b>押しっぱなし</b>で圧力チャージ、<b>離して</b>開栓！<br>
+  <h1 data-en="SHUPON<em>!</em>">シュポン<em>！</em></h1>
+  <p data-en="~ The cork-popping chicken race ~">〜 開栓ギリギリチャレンジ 〜</p>
+  <p data-en="<b>Hold</b> to build pressure, <b>release</b> to pop the cork!<br>The closer to 100%, the higher the score &#8212; but go over and you get foam and <b>zero points</b>.<br>Three bottles. How long can you hold your nerve?"><b>押しっぱなし</b>で圧力チャージ、<b>離して</b>開栓！<br>
   100%に近いほど高得点。でも超えたら泡まみれの<b>0点</b>。<br>
   ボトル3本勝負、キミはどこまで我慢できる？</p>
-  <button class="bigbtn" id="startBtn" type="button">▶ はじめる</button>
-  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+  <button class="bigbtn" id="startBtn" type="button" data-en="▶ Start">▶ はじめる</button>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
 </div>
 
 <div class="screen hidden" id="resultScreen">
@@ -169,14 +171,17 @@ body{
   <p class="final">TOTAL <span id="finalScore">0</span> pt</p>
   <p class="rank" id="rankText"></p>
   <p id="resultComment"></p>
-  <button class="bigbtn" id="retryBtn" type="button">▶ もういっぽん</button>
-  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+  <button class="bigbtn" id="retryBtn" type="button" data-en="▶ One more bottle">▶ もういっぽん</button>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
 </div>
 
+<script src="./i18n.js"></script>
 <script>
 (function(){
   'use strict';
   var $ = function(id){return document.getElementById(id);};
+  var T=function(ja,en){return (window.POME_LANG==='en')?en:ja;};
+  var Q=function(s){return (window.POME_LANG==='en')?('\u201C'+s+'\u201D'):('\u300C'+s+'\u300D');};
   var gaugeFill=$('gaugeFill'), pctEl=$('pct'), bottleBox=$('bottleBox'),
       msg=$('msg'), bottlesEl=$('bottles'), scoreEl=$('score'), bestEl=$('best'),
       titleScreen=$('titleScreen'), resultScreen=$('resultScreen'),
@@ -236,10 +241,11 @@ body{
   bestEl.textContent=best;
 
   var PATTERNS=[
-    {name:'素直なボトル',    base:26, accel:1.6, stall:0},
-    {name:'せっかちなボトル', base:22, accel:2.6, stall:0},
-    {name:'気まぐれなボトル', base:30, accel:1.8, stall:0.9}
+    {name:'素直なボトル',    en:'The Honest Bottle',    base:26, accel:1.6, stall:0},
+    {name:'せっかちなボトル', en:'The Impatient Bottle', base:22, accel:2.6, stall:0},
+    {name:'気まぐれなボトル', en:'The Moody Bottle',     base:30, accel:1.8, stall:0.9}
   ];
+  function pname(p){ return T(p.name, p.en); }
 
   function setMsg(main,sub){ msg.innerHTML = main + (sub?'<br><span class="sub">'+sub+'</span>':''); }
   function drawBottles(){
@@ -301,7 +307,8 @@ body{
     cork.style.transform='';
     cork.style.opacity='1';
     render(); drawBottles();
-    setMsg(pattern.name+'、いきます', '画面を押しっぱなし → ちょうどいいところで離す！');
+    setMsg(T(pattern.name+'、いきます', pname(pattern)+' \u2014 here we go'),
+           T('画面を押しっぱなし → ちょうどいいところで離す！','Hold the screen, then let go at just the right moment!'));
   }
   function beginHold(){
     if(state!=='ready') return;
@@ -338,13 +345,13 @@ body{
     var rect=bottleBox.getBoundingClientRect();
     var cx=rect.left+rect.width/2, cy=rect.top+20;
     if(p<50){
-      pts=0; mainMsg='……ポスッ。'; sub='気が早い！ 圧力50%未満は0点です';
+      pts=0; mainMsg=T('……ポスッ。','...pfft.'); sub=T('気が早い！ 圧力50%未満は0点です','Too soon! Anything under 50% pressure scores nothing.');
       beep(240,0.2,'sine',0.08);
     }else{
       pts=Math.round(Math.pow(p-50,2));
-      if(p>=98){ pts*=2; mainMsg='シュッッポーーーン！！ 神開栓！'; sub='98%超えボーナス ×2！ +'+pts+'pt'; perfectSound(); }
-      else if(p>=90){ mainMsg='シュポンッ！ いい音！'; sub='+'+pts+'pt'; popSound(); }
-      else{ mainMsg='シュポン。'; sub='+'+pts+'pt（まだ攻められたかも…）'; popSound(); }
+      if(p>=98){ pts*=2; mainMsg=T('シュッッポーーーン！！ 神開栓！','SHUUUPOOON!! A divine pop!'); sub=T('98%超えボーナス ×2！ +'+pts+'pt','Over-98% bonus ×2! +'+pts+' pt'); perfectSound(); }
+      else if(p>=90){ mainMsg=T('シュポンッ！ いい音！','Shupon! Lovely sound!'); sub='+'+pts+T('pt',' pt'); popSound(); }
+      else{ mainMsg=T('シュポン。','Shupon.'); sub=T('+'+pts+'pt（まだ攻められたかも…）','+'+pts+' pt (you could have pushed further...)'); popSound(); }
       cork.style.transition='transform .6s cubic-bezier(.2,.6,.3,1), opacity .6s';
       cork.style.transform='translate(30px,-160px) rotate(50deg)';
       cork.style.opacity='0';
@@ -360,7 +367,8 @@ body{
     foam(rect.left+rect.width/2, rect.top+30);
     failSound();
     render();
-    setMsg('ブシャアアアア！！ 泡まみれ！','100%を超えました……このボトルは0点');
+    setMsg(T('ブシャアアアア！！ 泡まみれ！','WHOOOOSH!! Foam everywhere!'),
+           T('100%を超えました……このボトルは0点','You went past 100% &#8212; no points for this bottle.'));
     advance();
   }
   function advance(){
@@ -373,28 +381,41 @@ body{
     (function pl(){ var e=(performance.now()-t0)/1000; stepParts(1/60); if(e<2) requestAnimationFrame(pl); })();
   }
   function rankOf(s){
-    if(s>=9000) return ['開栓の神','その指、国宝級。生産者に自慢していいレベルです。'];
-    if(s>=6000) return ['ソムリエ・オブ・ドキドキ','ギリギリを見切る目、プロの所作です。'];
-    if(s>=3500) return ['開栓ソムリエ','いい度胸。泡があなたに敬意を払っています。'];
-    if(s>=1500) return ['見習いソムリエ','慎重派ですね。次は90%の壁を越えよう。'];
-    return ['泡まみれの人','大丈夫、拭けば乾きます。もういっぽん！'];
+    if(s>=9000) return T(['開栓の神','その指、国宝級。生産者に自慢していいレベルです。'],
+                         ['God of the Cork','Those fingers belong in a museum. Tell the producer.']);
+    if(s>=6000) return T(['ソムリエ・オブ・ドキドキ','ギリギリを見切る目、プロの所作です。'],
+                         ['Sommelier of Suspense','You read the edge like a professional.']);
+    if(s>=3500) return T(['開栓ソムリエ','いい度胸。泡があなたに敬意を払っています。'],
+                         ['Cork Sommelier','Nerves of steel. The bubbles respect you.']);
+    if(s>=1500) return T(['見習いソムリエ','慎重派ですね。次は90%の壁を越えよう。'],
+                         ['Apprentice Sommelier','Cautious. Next time, break the 90% wall.']);
+    return T(['泡まみれの人','大丈夫、拭けば乾きます。もういっぽん！'],
+             ['Covered in Foam','It dries. Have another bottle!']);
   }
   function showResult(){
     state='result';
     var r=rankOf(total);
     $('finalScore').textContent=total;
-    $('rankText').textContent='「'+r[0]+'」';
+    $('rankText').textContent=Q(r[0]);
     $('resultComment').textContent=r[1];
     if(total>best){
       best=total;
       try{ localStorage.setItem('shupon_best', String(best)); }catch(e){}
       bestEl.textContent=best;
-      $('resultTitle').innerHTML='自己ベスト<em>更新！</em>';
+      $('resultTitle').innerHTML=T('自己ベスト<em>更新！</em>','New <em>personal best!</em>');
     }else{
-      $('resultTitle').textContent='結果発表';
+      $('resultTitle').textContent=T('結果発表','Results');
     }
     resultScreen.classList.remove('hidden');
   }
+
+  addEventListener('langchange', function(){
+    if(state==='result'){
+      var r=rankOf(total);
+      $('rankText').textContent=Q(r[0]);
+      $('resultComment').textContent=r[1];
+    }
+  });
 
   function down(e){
     if(e.target.closest && e.target.closest('button, a')) return;

@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="i18n-title-en" content="Shake Shake! — POME BOX">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>シェケシェケ！ 〜ふりふりバーテンダー〜 | POME BOX</title>
 <meta name="description" content="スマホを振ってカクテルをシェイク！45秒で何杯さばける？カクテル図鑑を集めるふりふりバーテンダーラッシュ。">
@@ -152,6 +153,7 @@ body{
 <div id="hud">
   <div><span class="score">SCORE <span id="score">0</span></span><br><span class="best">BEST <span id="best">0</span></span></div>
   <div id="timer">45</div>
+  <span id="langMount"></span>
   <button id="mute" type="button">♪ ON</button>
 </div>
 
@@ -175,38 +177,41 @@ body{
     <div id="shakeCount"></div>
   </div>
   <p id="combo"></p>
-  <p id="hint">スマホをふる！ or 連打！</p>
+  <p id="hint" data-en="Shake your phone! or tap fast!">スマホをふる！ or 連打！</p>
 </div>
 
 <!-- ===== title ===== -->
 <div class="screen" id="titleScreen">
-  <h1>シェケ<em>シェケ</em>！</h1>
-  <p>〜 ふりふりバーテンダー 〜</p>
-  <p><b>スマホをシャカシャカ振って</b>カクテルをシェイク！<br>
+  <h1 data-en="SHAKE <em>SHAKE</em>!">シェケ<em>シェケ</em>！</h1>
+  <p data-en="~ The shaking bartender ~">〜 ふりふりバーテンダー 〜</p>
+  <p data-en="<b>Shake your phone</b> to mix the cocktail!<br>Hit the required number of shakes and it&#8217;s served &#8212; next customer, straight away.<br>How many can you pour in <b>45 seconds</b>? The more you make, the more your <b>cocktail book</b> fills up.<br>(Can&#8217;t shake? Rapid tapping works too.)"><b>スマホをシャカシャカ振って</b>カクテルをシェイク！<br>
   規定回数ふったら完成→すぐ次のお客さん。<br>
   <b>45秒</b>で何杯さばける？ 作るほど<b>カクテル図鑑</b>が増えていく。<br>
   （振れないときは連打でもOK）</p>
-  <button class="bigbtn" id="startBtn" type="button">▶ 開店する</button>
+  <button class="bigbtn" id="startBtn" type="button" data-en="▶ Open the bar">▶ 開店する</button>
   <div id="dex"></div>
   <p id="dexNote"></p>
-  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
 </div>
 
 <!-- ===== result ===== -->
 <div class="screen hidden" id="resultScreen">
   <h1 id="resTitle">閉店〜！</h1>
-  <p class="final"><span id="served">0</span>杯 提供 / SCORE <span id="finalScore">0</span></p>
+  <p class="final"><span id="served">0</span><span data-en=" served / SCORE ">杯 提供 / SCORE </span><span id="finalScore">0</span></p>
   <p class="rank" id="rankText"></p>
   <p id="resComment"></p>
   <p id="unlockMsg" class="newTag"></p>
-  <button class="bigbtn" id="retryBtn" type="button">▶ もう一晩</button>
-  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+  <button class="bigbtn" id="retryBtn" type="button" data-en="▶ One more night">▶ もう一晩</button>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
 </div>
 
+<script src="./i18n.js"></script>
 <script>
 (function(){
   'use strict';
   var $=function(id){return document.getElementById(id);};
+  var T=function(ja,en){return (window.POME_LANG==='en')?en:ja;};
+  var Q=function(s){return (window.POME_LANG==='en')?('\u201C'+s+'\u201D'):('\u300C'+s+'\u300D');};
   var fx=$('fx'), fctx=fx.getContext('2d');
   function sizeFx(){ fx.width=innerWidth; fx.height=innerHeight; }
   sizeFx(); addEventListener('resize', sizeFx);
@@ -235,17 +240,18 @@ body{
 
   /* ---------- cocktails (unlock by lifetime serves) ---------- */
   var COCKTAILS=[
-    {n:'ジントニック',    g:'🥃', c:'#DCE7F0', s:8,  unlock:0},
-    {n:'カシスオレンジ',  g:'🍹', c:'#F2B84B', s:10, unlock:0},
-    {n:'モヒート',        g:'🍸', c:'#7ECBA1', s:12, unlock:0},
-    {n:'ソルティドッグ',  g:'🥂', c:'#EAF2FB', s:12, unlock:5},
-    {n:'マルガリータ',    g:'🍸', c:'#EDF3E4', s:14, unlock:10},
-    {n:'ブルーハワイ',    g:'🍹', c:'#7FB5DE', s:16, unlock:18},
-    {n:'コスモポリタン',  g:'🍸', c:'#F27E63', s:16, unlock:28},
-    {n:'テキーラサンライズ',g:'🍹', c:'#F2996B', s:18, unlock:40},
-    {n:'ミッドナイトブルー',g:'🍸', c:'#2E6FA3', s:20, unlock:55},
-    {n:'まぼろしの一杯',  g:'✨', c:'#F5E6A8', s:26, unlock:80}
+    {n:'ジントニック',    e:'Gin & Tonic',     g:'🥃', c:'#DCE7F0', s:8,  unlock:0},
+    {n:'カシスオレンジ',  e:'Cassis Orange',   g:'🍹', c:'#F2B84B', s:10, unlock:0},
+    {n:'モヒート',        e:'Mojito',          g:'🍸', c:'#7ECBA1', s:12, unlock:0},
+    {n:'ソルティドッグ',  e:'Salty Dog',       g:'🥂', c:'#EAF2FB', s:12, unlock:5},
+    {n:'マルガリータ',    e:'Margarita',       g:'🍸', c:'#EDF3E4', s:14, unlock:10},
+    {n:'ブルーハワイ',    e:'Blue Hawaii',     g:'🍹', c:'#7FB5DE', s:16, unlock:18},
+    {n:'コスモポリタン',  e:'Cosmopolitan',    g:'🍸', c:'#F27E63', s:16, unlock:28},
+    {n:'テキーラサンライズ',e:'Tequila Sunrise', g:'🍹', c:'#F2996B', s:18, unlock:40},
+    {n:'ミッドナイトブルー',e:'Midnight Blue',   g:'🍸', c:'#2E6FA3', s:20, unlock:55},
+    {n:'まぼろしの一杯',  e:'The Phantom Glass',g:'✨', c:'#F5E6A8', s:26, unlock:80}
   ];
+  function cname(c){ return T(c.n, c.e); }
   var FACES=['🙂','😀','🥰','🤠','🧐','😎','🥺','😾','👻','🤖','💂','🦉'];
   var lifetime=0, best=0;
   try{
@@ -261,14 +267,16 @@ body{
       var open=lifetime>=c.unlock;
       el.className='dex-item'+(open?'':' locked');
       el.innerHTML= open
-        ? '<span class="glass">'+c.g+'</span><span class="nm">'+c.n+'</span>シェイク'+c.s+'回'
-        : '<span class="glass">❓</span><span class="nm">？？？</span>累計'+c.unlock+'杯で解禁';
+        ? '<span class="glass">'+c.g+'</span><span class="nm">'+cname(c)+'</span>'+T('シェイク'+c.s+'回','Shake ×'+c.s)
+        : '<span class="glass">❓</span><span class="nm">'+T('？？？','???')+'</span>'+T('累計'+c.unlock+'杯で解禁','Unlocks at '+c.unlock+' served');
       d.appendChild(el);
     });
     var next=COCKTAILS.find(function(c){return lifetime<c.unlock;});
     $('dexNote').textContent = next
-      ? '累計 '+lifetime+' 杯 ／ 次の解禁まであと '+(next.unlock-lifetime)+' 杯！'
-      : '累計 '+lifetime+' 杯 ／ 全カクテル制覇！ すごい！';
+      ? T('累計 '+lifetime+' 杯 ／ 次の解禁まであと '+(next.unlock-lifetime)+' 杯！',
+          lifetime+' served in total / '+(next.unlock-lifetime)+' more to the next unlock!')
+      : T('累計 '+lifetime+' 杯 ／ 全カクテル制覇！ すごい！',
+          lifetime+' served in total / every cocktail unlocked. Amazing!');
   }
   renderDex();
 
@@ -303,8 +311,8 @@ body{
     order=pool[Math.floor(Math.random()*pool.length)];
     need=order.s; done=0; orderStart=performance.now();
     $('custFace').textContent=FACES[Math.floor(Math.random()*FACES.length)];
-    $('orderName').textContent=order.n+' '+order.g;
-    $('orderNote').textContent='シェイク '+need+' 回で！';
+    $('orderName').textContent=cname(order)+' '+order.g;
+    $('orderNote').textContent=T('シェイク '+need+' 回で！','Shake it '+need+' times!');
     $('liquid').setAttribute('fill', order.c);
     updateShaker();
   }
@@ -334,7 +342,7 @@ body{
     if(combo>=2){ pts+=combo*25; }
     score+=pts;
     $('score').textContent=score;
-    $('combo').textContent = fast ? ('⚡はやい！ +'+pts+(combo>=2?'  '+combo+' COMBO!':'')) : ('+'+pts);
+    $('combo').textContent = fast ? (T('⚡はやい！ +','⚡Fast! +')+pts+(combo>=2?'  '+combo+' COMBO!':'')) : ('+'+pts);
     ding();
     var r=$('shakerWrap').getBoundingClientRect();
     splash(r.left+r.width/2, r.top+30, order.c, 26);
@@ -358,11 +366,16 @@ body{
     },1000);
   }
   function rankOf(n){
-    if(n>=22) return ['伝説のシェイカー','その腕、もはや営業許可がいるレベル。'];
-    if(n>=16) return ['カリスマバーテンダー','店の外まで行列ができています。'];
-    if(n>=11) return ['売れっ子バーテンダー','常連さんがつき始めました。'];
-    if(n>=6)  return ['見習いバーテンダー','いい振りです。明日も出勤よろしく。'];
-    return ['腕ならし中','まずは肩のストレッチから！'];
+    if(n>=22) return T(['伝説のシェイカー','その腕、もはや営業許可がいるレベル。'],
+                       ['Legendary Shaker','That arm needs a licence of its own.']);
+    if(n>=16) return T(['カリスマバーテンダー','店の外まで行列ができています。'],
+                       ['Star Bartender','The queue is out the door.']);
+    if(n>=11) return T(['売れっ子バーテンダー','常連さんがつき始めました。'],
+                       ['Popular Bartender','You are picking up regulars.']);
+    if(n>=6)  return T(['見習いバーテンダー','いい振りです。明日も出勤よろしく。'],
+                       ['Apprentice Bartender','Nice shaking. See you again tomorrow.']);
+    return T(['腕ならし中','まずは肩のストレッチから！'],
+             ['Warming Up','Start with a shoulder stretch!']);
   }
   function endRun(){
     clearInterval(timerId);
@@ -372,16 +385,16 @@ body{
     var after=unlockedList().length;
     try{
       localStorage.setItem('shake_total', String(lifetime));
-      if(score>best){ best=score; localStorage.setItem('shake_best', String(best)); $('resTitle').innerHTML='自己ベスト<em>更新！</em>'; }
-      else{ $('resTitle').textContent='閉店〜！'; }
+      if(score>best){ best=score; localStorage.setItem('shake_best', String(best)); $('resTitle').innerHTML=T('自己ベスト<em>更新！</em>','New <em>personal best!</em>'); }
+      else{ $('resTitle').textContent=T('閉店〜！','Last orders!'); }
     }catch(e){}
     $('best').textContent=best;
     $('served').textContent=served;
     $('finalScore').textContent=score;
     var r=rankOf(served);
-    $('rankText').textContent='「'+r[0]+'」';
+    $('rankText').textContent=Q(r[0]);
     $('resComment').textContent=r[1];
-    $('unlockMsg').textContent = after>before ? '🎉 新しいカクテルが図鑑に解禁されました！' : '';
+    $('unlockMsg').textContent = after>before ? T('🎉 新しいカクテルが図鑑に解禁されました！','🎉 A new cocktail has been added to your book!') : '';
     renderDex();
     $('resultScreen').classList.remove('hidden');
   }
@@ -414,6 +427,20 @@ body{
   }, {passive:false});
   addEventListener('keydown', function(e){
     if(e.code==='Space' && state==='play'){ e.preventDefault(); shake(); }
+  });
+
+  addEventListener('langchange', function(){
+    renderDex();
+    if(state==='play' && order){
+      $('orderName').textContent=cname(order)+' '+order.g;
+      $('orderNote').textContent=T('シェイク '+need+' 回で！','Shake it '+need+' times!');
+    }
+    if(state==='result'){
+      var rr=rankOf(served);
+      $('rankText').textContent=Q(rr[0]);
+      $('resComment').textContent=rr[1];
+      if(!/更新|best/.test($('resTitle').textContent)) $('resTitle').textContent=T('閉店〜！','Last orders!');
+    }
   });
 
   $('startBtn').addEventListener('click', function(){ ac(); unlockAudio(); enableMotion(); startRun(); });

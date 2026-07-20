@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="i18n-title-en" content="Pome Pome! — POME BOX">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>ぽめぽめ！ 〜もふもふ連鎖パズル〜 | POME BOX</title>
 <meta name="description" content="ふわふわのポメラニアンを4匹つなげて「ぽめっ」と消す落ちものパズル。連鎖でもふもふ大爆発！">
@@ -134,7 +135,8 @@ body{
 
 <div id="wrap">
   <div id="topbar">
-    <span class="t">ぽめ<em>ぽめ！</em></span>
+    <span class="t" data-en="POME <em>POME!</em>">ぽめ<em>ぽめ！</em></span>
+    <span id="langMount"></span>
     <button id="mute" type="button">♪ ON</button>
   </div>
   <div id="gamerow">
@@ -155,32 +157,35 @@ body{
     <button class="cbtn" id="btnD" type="button">▼</button>
     <button class="cbtn" id="btnRt" type="button">▶</button>
   </div>
-  <p class="hint">← → 移動 ／ ↑ or Z 回転 ／ ↓ 高速落下 ／ スペース 一気に落とす</p>
-  <p class="hintm">↻ボタンか、盤面タップで回転！</p>
+  <p class="hint" data-en="← → move / ↑ or Z rotate / ↓ soft drop / Space hard drop">← → 移動 ／ ↑ or Z 回転 ／ ↓ 高速落下 ／ スペース 一気に落とす</p>
+  <p class="hintm" data-en="Tap ↻ or the board to rotate!">↻ボタンか、盤面タップで回転！</p>
 </div>
 
 <div class="screen" id="titleScreen">
-  <h1>ぽめ<em>ぽめ！</em></h1>
-  <p>〜 もふもふ連鎖パズル 〜</p>
-  <p>2匹ずつ落ちてくるポメラニアンを動かして、<br><b>同じ色を4匹つなげると「ぽめっ」と消える！</b><br>うまく積んで連鎖を狙おう。もふもふが爆発します。</p>
-  <button class="bigbtn" id="startBtn" type="button">▶ あそぶ</button>
-  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+  <h1 data-en="POME <em>POME!</em>">ぽめ<em>ぽめ！</em></h1>
+  <p data-en="~ The fluffy chain puzzle ~">〜 もふもふ連鎖パズル 〜</p>
+  <p data-en="Move the Pomeranians as they fall in pairs.<br><b>Link four of the same colour and they vanish with a &#8216;pome!&#8217;</b><br>Stack well and go for chains. Fluff will explode.">2匹ずつ落ちてくるポメラニアンを動かして、<br><b>同じ色を4匹つなげると「ぽめっ」と消える！</b><br>うまく積んで連鎖を狙おう。もふもふが爆発します。</p>
+  <button class="bigbtn" id="startBtn" type="button" data-en="▶ Play">▶ あそぶ</button>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
 </div>
 
 <div class="screen hidden" id="overScreen">
   <h1 id="overTitle">つみあがった！</h1>
   <p class="final">SCORE <span id="finalScore">0</span></p>
-  <p class="final" style="font-size:15px">最大連鎖 <span id="finalChain">0</span> ／ 消したポメ <span id="finalPoms">0</span> 匹</p>
+  <p class="final" style="font-size:15px"><span data-en="Max chain ">最大連鎖 </span><span id="finalChain">0</span><span data-en=" / Poms cleared "> ／ 消したポメ </span><span id="finalPoms">0</span><span data-en=""> 匹</span></p>
   <p class="rank" id="rankText"></p>
   <p id="rankComment"></p>
-  <button class="bigbtn" id="retryBtn" type="button">▶ もういっかい</button>
-  <a class="backlink" href="./index.html">← POME BOXへもどる</a>
+  <button class="bigbtn" id="retryBtn" type="button" data-en="▶ Play again">▶ もういっかい</button>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
 </div>
 
+<script src="./i18n.js"></script>
 <script>
 (function(){
   'use strict';
   var $=function(id){return document.getElementById(id);};
+  var T=function(ja,en){return (window.POME_LANG==='en')?en:ja;};
+  var Q=function(s){return (window.POME_LANG==='en')?('\u201C'+s+'\u201D'):('\u300C'+s+'\u300D');};
   var W=6, H=13, HIDDEN=1;
   var cv=$('board'), ctx=cv.getContext('2d');
   var ncv=$('nextCv'), nctx=ncv.getContext('2d');
@@ -363,7 +368,7 @@ body{
       for(var y=HIDDEN;y<H;y++){ for(var x=0;x<W;x++){ if(board[y][x]!==-1){ empty=false; break; } } if(!empty)break; }
       if(empty && chainNow>0){
         score+=2000; $('score').textContent=score;
-        showPop('ぜんぶもふもふ！ +2000');
+        showPop(T('ぜんぶもふもふ！ +2000','All fluff! +2000'));
         zenkeshiSound();
       }
       spawn();
@@ -378,7 +383,7 @@ body{
     var mul=CHAIN_MUL[Math.min(chainNow-1,CHAIN_MUL.length-1)];
     score+=count*10*mul;
     $('score').textContent=score;
-    if(chainNow>=2) showPop(chainNow+'連鎖！');
+    if(chainNow>=2) showPop(T(chainNow+'連鎖！',chainNow+' chain!'));
     popSound(chainNow);
     phase='flash';
     flashUntil=performance.now()+340;
@@ -397,11 +402,16 @@ body{
     chainPop.classList.add('show');
   }
   function rankOf(s){
-    if(s>=60000) return ['ぽめの神','ブリーダーを名乗っていいレベル。もふもふが尊敬しています。'];
-    if(s>=30000) return ['連鎖マイスター','その積み、美しい。ポメたちも誇らしげです。'];
-    if(s>=12000) return ['もふもふ使い','いい連鎖でした。手にポメの毛がついていませんか？'];
-    if(s>=4000)  return ['ぽめ見習い','スジがいい。次は3連鎖を狙ってみよう。'];
-    return ['もふ吸い専門','消すより眺めていたタイプですね。分かります。'];
+    if(s>=60000) return T(['ぽめの神','ブリーダーを名乗っていいレベル。もふもふが尊敬しています。'],
+                          ['God of Pome','You could call yourself a breeder. The fluff looks up to you.']);
+    if(s>=30000) return T(['連鎖マイスター','その積み、美しい。ポメたちも誇らしげです。'],
+                          ['Chain Master','Beautiful stacking. The poms look proud.']);
+    if(s>=12000) return T(['もふもふ使い','いい連鎖でした。手にポメの毛がついていませんか？'],
+                          ['Fluff Handler','Nice chains. Any pom hair on your hands?']);
+    if(s>=4000)  return T(['ぽめ見習い','スジがいい。次は3連鎖を狙ってみよう。'],
+                          ['Pome Apprentice','Promising. Next time, aim for a triple chain.']);
+    return T(['もふ吸い専門','消すより眺めていたタイプですね。分かります。'],
+             ['Fluff Admirer','More watching than clearing. Understandable.']);
   }
   function gameOver(){
     phase='over';
@@ -410,18 +420,27 @@ body{
     $('finalScore').textContent=score;
     $('finalChain').textContent=maxChain;
     $('finalPoms').textContent=clearedPoms;
-    $('rankText').textContent='「'+r[0]+'」';
+    $('rankText').textContent=Q(r[0]);
     $('rankComment').textContent=r[1];
     if(score>best){
       best=score;
       try{ localStorage.setItem('pome_best',String(best)); }catch(e){}
       $('best').textContent=best;
-      $('overTitle').textContent='自己ベスト更新！';
+      $('overTitle').textContent=T('自己ベスト更新！','New personal best!');
     }else{
-      $('overTitle').textContent='つみあがった！';
+      $('overTitle').textContent=T('つみあがった！','Stacked out!');
     }
     $('overScreen').classList.remove('hidden');
   }
+  addEventListener('langchange', function(){
+    if(phase==='over'){
+      var r=rankOf(score);
+      $('rankText').textContent=Q(r[0]);
+      $('rankComment').textContent=r[1];
+      $('overTitle').textContent=(score>=best&&best>0)?T('自己ベスト更新！','New personal best!'):T('つみあがった！','Stacked out!');
+    }
+  });
+
   function startRun(){
     board=newBoard();
     score=0; maxChain=0; clearedPoms=0; groupsCleared=0;
