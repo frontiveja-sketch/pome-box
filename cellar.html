@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="i18n-title-en" content="Rolling Cellar — POME BOX">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ころころセラー 〜転がして育てる、わたしのカーヴ〜 | POME BOX</title>
+<meta name="description" content="同じワインをぶつけて合体、どんどん高いワインへ。紙パックから伝説の一本まで、セラーの総額を競う落ちものパズル。">
+<meta name="i18n-desc-en" content="Drop wines, match them and merge your way up from boxed wine to a legendary bottle. Build the most valuable cellar you can.">
+<meta name="theme-color" content="#5C1932">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%235C1932'/%3E%3Ctext x='50' y='72' font-size='52' text-anchor='middle' fill='%23F2B84B'%3E樽%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FBFAF4;
+  --ink:#1B3550;
+  --ink-soft:#4C6379;
+  --wine:#5C1932;
+  --wine-deep:#3A0F20;
+  --oak:#8A5A3B;
+  --gold:#F2B84B;
+  --coral:#F27E63;
+  --mint:#7ECBA1;
+  --pixel:"DotGothic16",monospace;
+  --sans:"Zen Kaku Gothic New",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{
+  background:linear-gradient(180deg,#2A1018 0%,#5C1932 42%,#8A5A3B 100%);
+  color:var(--ink);
+  font-family:var(--sans);
+  user-select:none;-webkit-user-select:none;
+  touch-action:manipulation;
+}
+
+/* ---------- HUD ---------- */
+#hud{
+  position:fixed;top:0;left:0;right:0;z-index:6;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:12px 14px;color:var(--cream);
+  font-family:var(--pixel);letter-spacing:.06em;
+  text-shadow:2px 2px 0 rgba(0,0,0,.35);
+}
+#hud .score{font-size:19px;display:block}
+#hud .best{font-size:11px;opacity:.75}
+#hud .right{display:flex;align-items:center;gap:8px}
+#mute{
+  border:2px solid var(--ink);border-radius:8px;background:var(--cream);color:var(--ink);
+  font-family:var(--pixel);font-size:13px;padding:4px 10px;cursor:pointer;
+  box-shadow:2px 2px 0 var(--ink);text-shadow:none;
+}
+#mute:active{transform:translate(2px,2px);box-shadow:none}
+
+/* ---------- 盤面 ---------- */
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#boardWrap{
+  position:relative;
+  touch-action:none;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  filter:drop-shadow(8px 10px 0 rgba(0,0,0,.28));
+}
+#board{display:block}
+
+/* NEXT パネル */
+#nextPanel{
+  position:absolute;top:0;left:100%;margin-left:14px;
+  width:78px;padding:8px 6px 10px;
+  border:3px solid var(--ink);border-radius:12px;
+  background:var(--cream);box-shadow:4px 4px 0 rgba(0,0,0,.28);
+  text-align:center;
+}
+#nextPanel .lbl{font-family:var(--pixel);font-size:11px;letter-spacing:.14em;color:var(--ink-soft)}
+#nextCv{display:block;margin:4px auto 2px}
+#nextName{font-size:9.5px;line-height:1.25;font-weight:700;color:var(--ink);min-height:24px}
+@media(max-width:720px){
+  #nextPanel{
+    top:auto;left:50%;bottom:100%;margin:0 0 10px;
+    transform:translateX(-50%);
+    width:auto;display:flex;align-items:center;gap:8px;padding:6px 12px;
+  }
+  #nextCv{margin:0}
+  #nextName{min-height:0;text-align:left;max-width:110px}
+}
+
+/* 合体ポップ */
+#pop{
+  position:absolute;left:50%;top:22%;transform:translate(-50%,-50%) scale(.6);
+  font-family:var(--pixel);font-size:22px;color:var(--gold);
+  text-shadow:3px 3px 0 var(--wine-deep);
+  opacity:0;pointer-events:none;white-space:nowrap;
+}
+#pop.show{animation:popIn .85s ease-out forwards}
+@keyframes popIn{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}
+  25%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+  70%{opacity:1;transform:translate(-50%,-70%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-105%) scale(1)}
+}
+
+/* ---------- 画面 ---------- */
+.screen{
+  position:fixed;inset:0;z-index:20;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:26px 20px;overflow-y:auto;
+  background:linear-gradient(180deg,rgba(42,16,24,.94),rgba(92,25,50,.94));
+  color:var(--cream);text-align:center;
+}
+.screen.hidden{display:none}
+.screen h1{
+  font-family:var(--pixel);font-size:clamp(30px,8vw,46px);letter-spacing:.04em;
+  text-shadow:4px 4px 0 var(--wine-deep);
+}
+.screen h1 em{font-style:normal;color:var(--gold)}
+.screen p{font-size:13.5px;line-height:1.85;max-width:30em}
+.screen .lead{font-family:var(--pixel);font-size:14px;color:var(--gold);letter-spacing:.08em}
+.bigbtn{
+  margin-top:6px;
+  font-family:var(--pixel);font-size:19px;letter-spacing:.06em;
+  padding:13px 34px;border:3px solid var(--ink);border-radius:12px;
+  background:var(--gold);color:var(--ink);cursor:pointer;
+  box-shadow:4px 4px 0 var(--ink);
+}
+.bigbtn:active{transform:translate(4px,4px);box-shadow:none}
+.backlink{
+  margin-top:4px;font-size:12px;color:var(--cream);opacity:.7;
+  text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;
+}
+.backlink:hover{opacity:1}
+.final{font-family:var(--pixel);font-size:22px;color:var(--gold)}
+.rank{font-family:var(--pixel);font-size:19px}
+
+/* セラー台帳 */
+#ledger{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));
+  gap:5px;width:min(440px,100%);margin-top:6px;
+  font-size:10.5px;text-align:left;
+}
+.led-item{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 7px;border-radius:7px;
+  background:rgba(251,250,244,.1);border:1px solid rgba(251,250,244,.16);
+}
+.led-item.locked{opacity:.42}
+.led-item .dot{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--cream);flex:none}
+.led-item .nm{font-weight:700}
+.led-item .pr{margin-left:auto;font-family:var(--pixel);font-size:9.5px;opacity:.8}
+#ledNote{font-family:var(--pixel);font-size:11.5px;color:var(--gold);letter-spacing:.05em}
+.hint{font-size:11.5px;opacity:.72}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div>
+    <span class="score">¥<span id="score">0</span></span>
+    <span class="best">BEST ¥<span id="best">0</span></span>
+  </div>
+  <div class="right">
+    <span id="langMount"></span>
+    <button id="mute" type="button">♪ ON</button>
+  </div>
+</div>
+
+<div id="stage">
+  <div id="boardWrap">
+    <canvas id="board"></canvas>
+    <div id="nextPanel">
+      <div class="lbl">NEXT</div>
+      <canvas id="nextCv" width="56" height="56"></canvas>
+      <div id="nextName"></div>
+    </div>
+    <div id="pop"></div>
+  </div>
+</div>
+
+<!-- ===== title ===== -->
+<div class="screen" id="titleScreen">
+  <h1 data-en="ROLLING <em>CELLAR</em>">ころころ<em>セラー</em></h1>
+  <p class="lead" data-en="~ Roll them in, raise the cellar ~">〜 転がして育てる、わたしのカーヴ 〜</p>
+  <p data-en="Drop bottles into the crate. <b>Two of the same wine merge into the next one up</b> &#8212; and the next one up is always worth more.<br>Your score is what the cellar is worth. Fill it past the line and the game ends.<br>From boxed wine to the bottle of legend: eleven steps.">
+    ワインを木箱に落としていきます。<b>同じワインどうしがぶつかると合体して、ひとつ上のワインへ。</b>上に行くほど値段も上がります。<br>
+    スコアはセラーの総額。線を越えて積み上がると終了です。<br>
+    紙パックから伝説の一本まで、全11段階。
+  </p>
+  <button class="bigbtn" id="startBtn" type="button" data-en="▶ Open the cellar">▶ セラーをひらく</button>
+  <div id="ledger"></div>
+  <p id="ledNote"></p>
+  <p class="hint" data-en="Drag to aim, release to drop. Keyboard: ← → to aim, Space to drop.">指でなぞって位置決め、離して投入。キーボードは ← → で移動、スペースで投入。</p>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
+</div>
+
+<!-- ===== result ===== -->
+<div class="screen hidden" id="overScreen">
+  <h1 id="overTitle">セラーがいっぱい！</h1>
+  <p class="final"><span data-en="Cellar value ">セラー総額 </span>¥<span id="finalScore">0</span></p>
+  <p class="final" style="font-size:14px"><span data-en="Best bottle: ">最高の一本： </span><span id="finalTop">-</span></p>
+  <p class="rank" id="rankText"></p>
+  <p id="rankComment"></p>
+  <button class="bigbtn" id="retryBtn" type="button" data-en="▶ One more cellar">▶ もういちど</button>
+  <a class="backlink" href="./index.html" data-en="← Back to POME BOX">← POME BOXへもどる</a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.20.0/matter.min.js"></script>
+<script src="./i18n.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id);};
+  var T=function(ja,en){return (window.POME_LANG==='en')?en:ja;};
+  var Q=function(s){return (window.POME_LANG==='en')?('\u201C'+s+'\u201D'):('\u300C'+s+'\u300D');};
+
+  if(!window.Matter){
+    $('titleScreen').innerHTML='<p style="color:#FBFAF4">'+
+      T('物理エンジンを読み込めませんでした。通信環境をご確認のうえ、再読み込みしてください。',
+        'Could not load the physics engine. Check your connection and reload.')+
+      '</p><a class="backlink" href="./index.html">← POME BOX</a>';
+    return;
+  }
+  var Engine=Matter.Engine, World=Matter.World, Bodies=Matter.Bodies,
+      Body=Matter.Body, Composite=Matter.Composite, Events=Matter.Events;
+
+  /* ================= ワインの階段 ================= */
+  /* 実在の生産者名は使わず、格付けのカテゴリー名で組んでいます */
+  var WINES=[
+    {ja:'紙パックワイン',      en:'Boxed wine',        s:'紙パック',   se:'Boxed',     r:14, price:500,     c:'#E8A0A8'},
+    {ja:'コンビニの一本',      en:'Corner-shop red',   s:'コンビニ',   se:'Corner',    r:18, price:1200,    c:'#DC8090'},
+    {ja:'ヴァン・ド・フランス',en:'Vin de France',     s:'VdF',        se:'VdF',       r:23, price:2500,    c:'#CB5C70'},
+    {ja:'IGP（地方名）',       en:'IGP regional',      s:'IGP',        se:'IGP',       r:28, price:5000,    c:'#B44257'},
+    {ja:'AOC 地区名',          en:'AOC district',      s:'AOC',        se:'AOC',       r:34, price:9000,    c:'#9A3049'},
+    {ja:'村名クリュ',          en:'Village cru',       s:'村名',       se:'Village',   r:40, price:18000,   c:'#7E2440'},
+    {ja:'プルミエ・クリュ',    en:'Premier cru',       s:'1er Cru',    se:'1er Cru',   r:47, price:40000,   c:'#651B36'},
+    {ja:'グラン・クリュ',      en:'Grand cru',         s:'Grand Cru',  se:'Grand Cru', r:55, price:90000,   c:'#4B142A'},
+    {ja:'至高のヴィンテージ',  en:'A great vintage',   s:'Vintage',    se:'Vintage',   r:63, price:250000,  c:'#7A4020'},
+    {ja:'オークションの古酒',  en:'Auction old bottle',s:'Auction',    se:'Auction',   r:70, price:700000,  c:'#A0692F'},
+    {ja:'伝説の一本',          en:'The bottle of legend',s:'伝説',     se:'Legend',    r:78, price:2000000, c:'#F2B84B'}
+  ];
+  function wname(i){ return T(WINES[i].ja, WINES[i].en); }
+  function wshort(i){ return T(WINES[i].s, WINES[i].se); }
+  var SPAWN_MAX=4;   /* 投入されるのは下位5段階まで */
+  var TOP=WINES.length-1;
+
+  /* ================= 盤面サイズ ================= */
+  var BW=360, BH=560, LINE_Y=104, DROP_Y=56, WALL=60;
+  var cv=$('board'), ctx=cv.getContext('2d'), scale=1;
+
+  function layout(){
+    var pad=window.innerWidth<720?16:24;
+    var availW=window.innerWidth-pad*2-(window.innerWidth<720?0:104);
+    var availH=window.innerHeight-(window.innerWidth<720?150:96);
+    scale=Math.min(availW/BW, availH/BH);
+    scale=Math.max(0.42, Math.min(1.1, scale));
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    cv.style.width=(BW*scale)+'px';
+    cv.style.height=(BH*scale)+'px';
+    cv.width=Math.round(BW*scale*dpr);
+    cv.height=Math.round(BH*scale*dpr);
+    ctx.setTransform(scale*dpr,0,0,scale*dpr,0,0);
+  }
+  layout();
+  addEventListener('resize',layout);
+
+  /* ================= 音 ================= */
+  var AC=null, muted=false, __unlocked=false;
+  function ac(){ if(!AC){ AC=new (window.AudioContext||window.webkitAudioContext)(); } if(AC.state==='suspended'){AC.resume();} return AC; }
+  function unlockAudio(){
+    if(__unlocked) return; __unlocked=true;
+    try{
+      var el=document.createElement('audio');
+      el.setAttribute('playsinline',''); el.loop=true; el.volume=0.01;
+      el.src='data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      var pr=el.play(); if(pr&&pr['catch']){ pr['catch'](function(){ __unlocked=false; }); }
+      document.body.appendChild(el);
+    }catch(e){ __unlocked=false; }
+  }
+  function beep(f,d,t,v){
+    if(muted)return;
+    try{
+      var a=ac(),o=a.createOscillator(),g=a.createGain();
+      o.type=t||'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(v||0.05,a.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+d);
+      o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+d);
+    }catch(e){}
+  }
+  function noise(dur,hp,vol){
+    if(muted)return;
+    try{
+      var a=ac(),len=Math.floor(a.sampleRate*dur),b=a.createBuffer(1,len,a.sampleRate),d=b.getChannelData(0);
+      for(var i=0;i<len;i++){ d[i]=(Math.random()*2-1)*(1-i/len); }
+      var s=a.createBufferSource(); s.buffer=b;
+      var f=a.createBiquadFilter(); f.type='highpass'; f.frequency.value=hp||2000;
+      var g=a.createGain(); g.gain.value=vol||0.08;
+      s.connect(f).connect(g).connect(a.destination); s.start();
+    }catch(e){}
+  }
+  function dropSound(){ noise(0.05,1800,0.05); beep(180,0.07,'triangle',0.04); }
+  function mergeSound(tier){
+    /* 上の段ほど高く澄んだ音に */
+    var base=330*Math.pow(1.09,tier);
+    beep(base,0.12,'sine',0.09);
+    setTimeout(function(){ beep(base*1.5,0.18,'sine',0.06); },70);
+    noise(0.04,4000,0.05);
+  }
+  function legendSound(){
+    [523,659,784,1047,1319].forEach(function(f,i){
+      setTimeout(function(){ beep(f,0.35,'sine',0.09); }, i*110);
+    });
+  }
+  function overSound(){
+    [392,330,262,196].forEach(function(f,i){
+      setTimeout(function(){ beep(f,0.3,'triangle',0.07); }, i*150);
+    });
+  }
+  $('mute').addEventListener('click',function(){ muted=!muted; this.textContent=muted?'♪ OFF':'♪ ON'; });
+
+  /* ================= 保存データ ================= */
+  var best=0, seenMax=0;
+  try{
+    best=parseInt(localStorage.getItem('cellar_best')||'0',10)||0;
+    seenMax=parseInt(localStorage.getItem('cellar_seen')||'0',10)||0;
+  }catch(e){}
+  function yen(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+  $('best').textContent=yen(best);
+
+  function renderLedger(){
+    var box=$('ledger'); box.innerHTML='';
+    WINES.forEach(function(w,i){
+      var open=i<=seenMax;
+      var el=document.createElement('div');
+      el.className='led-item'+(open?'':' locked');
+      el.innerHTML='<span class="dot" style="background:'+(open?w.c:'transparent')+'"></span>'+
+        '<span class="nm">'+(open?wname(i):T('？？？','???'))+'</span>'+
+        '<span class="pr">'+(open?('¥'+yen(w.price)):'—')+'</span>';
+      box.appendChild(el);
+    });
+    $('ledNote').textContent = seenMax>=TOP
+      ? T('全11段階 制覇！ セラーは完成しています。','All 11 steps reached. The cellar is complete.')
+      : T('台帳 '+(seenMax+1)+' / '+WINES.length+' 段階まで記帳ずみ',
+          'Ledger: '+(seenMax+1)+' of '+WINES.length+' steps recorded');
+  }
+  renderLedger();
+
+  /* ================= 物理 ================= */
+  var engine=Engine.create();
+  engine.gravity.y=1.05;
+  engine.positionIterations=8;
+  engine.velocityIterations=6;
+
+  var walls=[
+    Bodies.rectangle(BW/2, BH+WALL/2, BW+WALL*2, WALL, {isStatic:true, friction:0.5}),
+    Bodies.rectangle(-WALL/2, BH/2, WALL, BH*2, {isStatic:true, friction:0.4}),
+    Bodies.rectangle(BW+WALL/2, BH/2, WALL, BH*2, {isStatic:true, friction:0.4})
+  ];
+  World.add(engine.world, walls);
+
+  var phase='title';           /* title | play | over */
+  var score=0, topTier=0;
+  var aimX=BW/2, nextTier=0, curTier=0, canDrop=true;
+  var overTimer=0;
+  var mergeQueue=[];
+
+  function newTier(){ return Math.floor(Math.random()*(SPAWN_MAX+1)); }
+
+  function addWine(tier,x,y,vx){
+    var w=WINES[tier];
+    var b=Bodies.circle(x,y,w.r,{
+      restitution:0.12,
+      friction:0.42,
+      frictionStatic:0.7,
+      density:0.0012,
+      slop:0.02
+    });
+    b.wineTier=tier;
+    b.born=performance.now();
+    b.merged=false;
+    if(vx) Body.setVelocity(b,{x:vx,y:0});
+    World.add(engine.world,b);
+    return b;
+  }
+
+  Events.on(engine,'collisionStart',function(ev){
+    if(phase!=='play') return;
+    for(var i=0;i<ev.pairs.length;i++){
+      var a=ev.pairs[i].bodyA, b=ev.pairs[i].bodyB;
+      if(a.wineTier===undefined||b.wineTier===undefined) continue;
+      if(a.merged||b.merged) continue;
+      if(a.wineTier!==b.wineTier) continue;
+      if(a.wineTier>=TOP) continue;      /* 最上位はそれ以上合体しない */
+      a.merged=b.merged=true;
+      mergeQueue.push([a,b]);
+    }
+  });
+
+  function showPop(text){
+    var p=$('pop');
+    p.textContent=text;
+    p.classList.remove('show');
+    void p.offsetWidth;
+    p.classList.add('show');
+  }
+
+  var sparks=[];
+  function spark(x,y,color,n){
+    for(var i=0;i<n;i++){
+      sparks.push({x:x,y:y,vx:(Math.random()-0.5)*5,vy:-1.5-Math.random()*4,
+                   r:1.5+Math.random()*3,c:color,life:1});
+    }
+  }
+
+  function resolveMerges(){
+    while(mergeQueue.length){
+      var pair=mergeQueue.shift();
+      var a=pair[0], b=pair[1];
+      if(!Composite.get(engine.world,a.id,'body')||!Composite.get(engine.world,b.id,'body')) continue;
+      var t=a.wineTier+1;
+      var x=(a.position.x+b.position.x)/2, y=(a.position.y+b.position.y)/2;
+      World.remove(engine.world,a); World.remove(engine.world,b);
+      var nb=addWine(t,x,y,0);
+      Body.setVelocity(nb,{x:0,y:-1.2});
+
+      score+=WINES[t].price;
+      $('score').textContent=yen(score);
+      if(t>topTier) topTier=t;
+      if(t>seenMax){
+        seenMax=t;
+        try{ localStorage.setItem('cellar_seen',String(seenMax)); }catch(e){}
+      }
+      spark(x,y,WINES[t].c,10+t*2);
+      if(t===TOP){
+        legendSound();
+        showPop(T('伝説の一本！','The bottle of legend!'));
+      }else{
+        mergeSound(t);
+        if(t>=6) showPop(wname(t)+'！');
+      }
+    }
+  }
+
+  /* ================= 投入 ================= */
+  function clampAim(x){
+    var r=WINES[curTier].r;
+    return Math.max(r+4, Math.min(BW-r-4, x));
+  }
+  function drop(){
+    if(phase!=='play'||!canDrop) return;
+    canDrop=false;
+    addWine(curTier, clampAim(aimX), DROP_Y, 0);
+    dropSound();
+    curTier=nextTier; nextTier=newTier();
+    drawNext();
+    setTimeout(function(){ canDrop=true; },420);
+  }
+
+  /* ================= 描画 ================= */
+  function bottleFace(c,cx,cy,r,tier,alpha){
+    var w=WINES[tier];
+    c.save();
+    c.globalAlpha=alpha===undefined?1:alpha;
+
+    /* 本体 */
+    var g=c.createRadialGradient(cx-r*0.32,cy-r*0.36,r*0.12,cx,cy,r);
+    g.addColorStop(0,'rgba(255,255,255,.42)');
+    g.addColorStop(0.42,w.c);
+    g.addColorStop(1,'rgba(0,0,0,.28)');
+    c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2);
+    c.fillStyle=w.c; c.fill();
+    c.fillStyle=g; c.fill();
+    c.lineWidth=Math.max(2,r*0.075);
+    c.strokeStyle='#1B3550'; c.stroke();
+
+    /* 上位はゴールドのリング（キャップシール） */
+    if(tier>=8){
+      c.beginPath(); c.arc(cx,cy,r*0.84,0,Math.PI*2);
+      c.lineWidth=Math.max(1.5,r*0.055);
+      c.strokeStyle='#F2B84B'; c.stroke();
+    }
+
+    /* ラベル */
+    if(r>=20){
+      var lw=r*1.32, lh=r*0.78;
+      c.save();
+      c.translate(cx,cy);
+      c.beginPath();
+      if(c.roundRect){ c.roundRect(-lw/2,-lh/2,lw,lh,r*0.14); }
+      else{ c.rect(-lw/2,-lh/2,lw,lh); }
+      c.fillStyle='#FBFAF4'; c.fill();
+      c.lineWidth=Math.max(1.4,r*0.05); c.strokeStyle='#1B3550'; c.stroke();
+
+      var label=wshort(tier);
+      var fs=Math.max(7, Math.min(r*0.32, lw/Math.max(3.2,label.length*0.62)));
+      c.fillStyle='#1B3550';
+      c.font='700 '+fs+'px "Zen Kaku Gothic New",sans-serif';
+      c.textAlign='center'; c.textBaseline='middle';
+      c.fillText(label,0,-lh*0.12);
+
+      if(r>=30){
+        c.fillStyle='#8A5A3B';
+        c.font=Math.max(6,r*0.2)+'px "DotGothic16",monospace';
+        c.fillText('¥'+yen(w.price),0,lh*0.28);
+      }
+      c.restore();
+    }
+
+    /* ハイライト */
+    c.beginPath();
+    c.arc(cx-r*0.36,cy-r*0.42,r*0.16,0,Math.PI*2);
+    c.fillStyle='rgba(255,255,255,.5)'; c.fill();
+    c.restore();
+  }
+
+  function drawCrate(){
+    /* 木箱（セラーのケース） */
+    ctx.save();
+    ctx.fillStyle='rgba(251,250,244,.94)';
+    ctx.fillRect(0,0,BW,BH);
+    /* 木目の横線 */
+    ctx.strokeStyle='rgba(138,90,59,.16)'; ctx.lineWidth=2;
+    for(var y=40;y<BH;y+=46){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(BW,y); ctx.stroke();
+    }
+    /* 焼印 */
+    ctx.save();
+    ctx.globalAlpha=.10;
+    ctx.fillStyle='#5C1932';
+    ctx.font='700 46px "DotGothic16",monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('CAVE',BW/2,BH*0.62);
+    ctx.font='700 20px "Zen Kaku Gothic New",sans-serif';
+    ctx.fillText('POME BOX',BW/2,BH*0.62+38);
+    ctx.restore();
+    /* 枠 */
+    ctx.lineWidth=6; ctx.strokeStyle='#1B3550';
+    ctx.strokeRect(3,3,BW-6,BH-6);
+    ctx.restore();
+  }
+
+  function drawLine(){
+    var danger=false;
+    var bodies=Composite.allBodies(engine.world);
+    for(var i=0;i<bodies.length;i++){
+      var b=bodies[i];
+      if(b.wineTier===undefined) continue;
+      if(b.position.y-WINES[b.wineTier].r < LINE_Y+30){ danger=true; break; }
+    }
+    ctx.save();
+    ctx.setLineDash([9,7]);
+    ctx.lineWidth=3;
+    ctx.strokeStyle=danger?'#F27E63':'rgba(27,53,80,.32)';
+    ctx.beginPath(); ctx.moveTo(0,LINE_Y); ctx.lineTo(BW,LINE_Y); ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawGhost(){
+    if(phase!=='play') return;
+    var x=clampAim(aimX), r=WINES[curTier].r;
+    /* 落下ガイド */
+    ctx.save();
+    ctx.setLineDash([4,8]); ctx.lineWidth=2;
+    ctx.strokeStyle='rgba(92,25,50,.28)';
+    ctx.beginPath(); ctx.moveTo(x,DROP_Y+r); ctx.lineTo(x,BH-8); ctx.stroke();
+    ctx.restore();
+    bottleFace(ctx,x,DROP_Y,r,curTier,canDrop?1:0.35);
+  }
+
+  function drawSparks(dt){
+    for(var i=sparks.length-1;i>=0;i--){
+      var p=sparks[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.22; p.life-=0.026;
+      if(p.life<=0){ sparks.splice(i,1); continue; }
+      ctx.save();
+      ctx.globalAlpha=Math.max(0,p.life);
+      ctx.fillStyle=p.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawNext(){
+    var nc=$('nextCv'), c=nc.getContext('2d');
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    nc.width=56*dpr; nc.height=56*dpr;
+    nc.style.width='56px'; nc.style.height='56px';
+    c.setTransform(dpr,0,0,dpr,0,0);
+    c.clearRect(0,0,56,56);
+    bottleFace(c,28,28,22,nextTier,1);
+    $('nextName').textContent=wname(nextTier);
+  }
+
+  function render(){
+    ctx.clearRect(0,0,BW,BH);
+    drawCrate();
+    drawLine();
+    var bodies=Composite.allBodies(engine.world);
+    for(var i=0;i<bodies.length;i++){
+      var b=bodies[i];
+      if(b.wineTier===undefined) continue;
+      ctx.save();
+      ctx.translate(b.position.x,b.position.y);
+      ctx.rotate(b.angle);
+      bottleFace(ctx,0,0,WINES[b.wineTier].r,b.wineTier,1);
+      ctx.restore();
+    }
+    drawGhost();
+    drawSparks();
+  }
+
+  /* ================= ゲームオーバー判定 ================= */
+  function checkOver(dt){
+    var bodies=Composite.allBodies(engine.world), over=false, now=performance.now();
+    for(var i=0;i<bodies.length;i++){
+      var b=bodies[i];
+      if(b.wineTier===undefined) continue;
+      if(now-b.born<900) continue;                       /* 落とした直後は見逃す */
+      if(b.speed>1.6) continue;                          /* まだ動いている最中は見逃す */
+      if(b.position.y-WINES[b.wineTier].r < LINE_Y){ over=true; break; }
+    }
+    if(over){
+      overTimer+=dt;
+      if(overTimer>1100) gameOver();
+    }else{
+      overTimer=0;
+    }
+  }
+
+  function rankOf(v){
+    if(v>=3000000) return T(['セラーの主','この総額、もう趣味ではなく資産です。台帳が輝いています。'],
+                            ['Master of the Cellar','At this value it stops being a hobby and becomes an asset.']);
+    if(v>=1200000) return T(['グラン・クリュ蒐集家','特級を並べる手つきに、迷いがありません。'],
+                            ['Grand Cru Collector','You line up the top crus without hesitating.']);
+    if(v>=500000)  return T(['目利きのバイヤー','いい買い付けです。倉庫の回転もお見事。'],
+                            ['Sharp Buyer','Good purchasing. Nice turnover, too.']);
+    if(v>=150000)  return T(['ワインラヴァー','いい流れでした。次は特級の壁を越えましょう。'],
+                            ['Wine Lover','Good run. Next time, break through to the grand crus.']);
+    return T(['まだ飲み頃前','セラーは寝かせてこそ。もう一度、ゆっくり積みましょう。'],
+             ['Not Yet Ready','A cellar needs time. Go again, and stack more slowly.']);
+  }
+
+  function gameOver(){
+    phase='over'; overSound();
+    $('finalScore').textContent=yen(score);
+    $('finalTop').textContent=wname(topTier);
+    var r=rankOf(score);
+    $('rankText').textContent=Q(r[0]);
+    $('rankComment').textContent=r[1];
+    if(score>best){
+      best=score;
+      try{ localStorage.setItem('cellar_best',String(best)); }catch(e){}
+      $('best').textContent=yen(best);
+      $('overTitle').textContent=T('自己ベスト更新！','New personal best!');
+    }else{
+      $('overTitle').textContent=T('セラーがいっぱい！','The cellar is full!');
+    }
+    renderLedger();
+    $('overScreen').classList.remove('hidden');
+  }
+
+  /* ================= ループ ================= */
+  var lastT=performance.now(), acc=0, STEP=1000/60;
+  (function loop(now){
+    requestAnimationFrame(loop);
+    now=now||performance.now();
+    var dt=Math.min(100, now-lastT); lastT=now;
+    if(phase==='play'){
+      /* 固定タイムステップ: 積み上がりの安定性がぜんぜん違う */
+      acc+=dt;
+      var steps=0;
+      while(acc>=STEP && steps<4){
+        Engine.update(engine,STEP);
+        resolveMerges();
+        acc-=STEP; steps++;
+      }
+      if(steps>=4) acc=0;
+      checkOver(dt);
+    }
+    render();
+  })();
+
+  /* ================= 入力 ================= */
+  var bw=$('boardWrap');
+  function toBoardX(clientX){
+    var rect=cv.getBoundingClientRect();
+    return (clientX-rect.left)/scale;
+  }
+  var pointing=false;
+  function onDown(e){
+    if(phase!=='play') return;
+    if(e.cancelable) e.preventDefault();
+    ac(); unlockAudio();
+    pointing=true;
+    aimX=toBoardX(e.clientX);
+  }
+  function onMove(e){
+    if(phase!=='play') return;
+    if(pointing && e.cancelable) e.preventDefault();
+    aimX=toBoardX(e.clientX);
+  }
+  function onUp(e){
+    if(phase!=='play') return;
+    if(pointing){ aimX=toBoardX(e.clientX!==undefined?e.clientX:aimX*scale); drop(); }
+    pointing=false;
+  }
+  bw.addEventListener('pointerdown',onDown);
+  bw.addEventListener('pointermove',onMove);
+  bw.addEventListener('pointerup',onUp);
+  bw.addEventListener('pointercancel',function(){ pointing=false; });
+  if(!window.PointerEvent){
+    var wrapT=function(fn){ return function(e){ var t=e.changedTouches[0];
+      fn({clientX:t.clientX,clientY:t.clientY,cancelable:e.cancelable,preventDefault:function(){e.preventDefault();}}); }; };
+    bw.addEventListener('touchstart',wrapT(onDown),{passive:false});
+    bw.addEventListener('touchmove',wrapT(onMove),{passive:false});
+    bw.addEventListener('touchend',wrapT(onUp),{passive:false});
+  }
+
+  addEventListener('keydown',function(e){
+    if(phase!=='play') return;
+    if(e.code==='ArrowLeft'){ e.preventDefault(); aimX=clampAim(aimX-14); }
+    else if(e.code==='ArrowRight'){ e.preventDefault(); aimX=clampAim(aimX+14); }
+    else if(e.code==='Space'||e.code==='ArrowDown'){ e.preventDefault(); drop(); }
+  });
+
+  /* ================= 開始 ================= */
+  function startRun(){
+    var bodies=Composite.allBodies(engine.world);
+    for(var i=0;i<bodies.length;i++){
+      if(bodies[i].wineTier!==undefined) World.remove(engine.world,bodies[i]);
+    }
+    mergeQueue.length=0; sparks.length=0;
+    score=0; topTier=0; overTimer=0; canDrop=true;
+    aimX=BW/2;
+    curTier=newTier(); nextTier=newTier();
+    $('score').textContent='0';
+    drawNext();
+    $('titleScreen').classList.add('hidden');
+    $('overScreen').classList.add('hidden');
+    phase='play';
+  }
+  $('startBtn').addEventListener('click',function(){ ac(); unlockAudio(); startRun(); });
+  $('retryBtn').addEventListener('click',function(){ ac(); unlockAudio(); startRun(); });
+
+  /* 言語切替に追従 */
+  addEventListener('langchange',function(){
+    renderLedger();
+    drawNext();
+    if(phase==='over'){
+      $('finalTop').textContent=wname(topTier);
+      var r=rankOf(score);
+      $('rankText').textContent=Q(r[0]);
+      $('rankComment').textContent=r[1];
+      if(!/更新|best/i.test($('overTitle').textContent)){
+        $('overTitle').textContent=T('セラーがいっぱい！','The cellar is full!');
+      }
+    }
+  });
+
+  drawNext();
+})();
+</script>
+</body>
+</html>
