@@ -58,6 +58,9 @@ body{
   background:#fff;
   box-shadow:6px 6px 0 rgba(27,53,80,.15);
   overflow:hidden;
+  touch-action:none;
+  -webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;
 }
 #board{display:block}
 #chainPop{
@@ -158,7 +161,7 @@ body{
     <button class="cbtn" id="btnRt" type="button">▶</button>
   </div>
   <p class="hint" data-en="← → move / ↑ or Z rotate / ↓ soft drop / Space hard drop">← → 移動 ／ ↑ or Z 回転 ／ ↓ 高速落下 ／ スペース 一気に落とす</p>
-  <p class="hintm" data-en="Tap ↻ or the board to rotate!">↻ボタンか、盤面タップで回転！</p>
+  <p class="hintm" data-en="Swipe the board to move &#183; tap to rotate &#183; swipe down to drop">盤面を左右になぞって移動 ／ タップで回転 ／ 下へなぞると高速落下</p>
 </div>
 
 <div class="screen" id="titleScreen">
@@ -304,15 +307,66 @@ body{
   bindBtn('btnRt',function(){move(1);});
   bindBtn('btnR',function(){rotate();});
   bindBtn('btnD',function(){softDrop=true;},function(){softDrop=false;});
+  /* ---- 盤面ジェスチャー: 左右なぞりで移動 / タップで回転 / 下なぞりで高速落下 ---- */
   (function(){
-    var bw=document.getElementById('boardWrap'), last=0;
-    function tapRotate(e){
-      if(e && e.cancelable) e.preventDefault();
-      var n=Date.now(); if(n-last<80) return; last=n;
-      ac(); unlockAudio(); rotate();
+    var bw=document.getElementById('boardWrap');
+    var active=false, pid=null, sx=0, sy=0, ax=0, st=0, dragged=false, dropping=false;
+
+    function step(){ return Math.max(18, CELL*0.55); }   /* 1マス動かすのに必要な距離 */
+
+    function onDown(e){
+      if(phase==='title'||phase==='over') return;
+      if(e.cancelable) e.preventDefault();
+      ac(); unlockAudio();
+      active=true; pid=e.pointerId;
+      sx=ax=e.clientX; sy=e.clientY; st=Date.now();
+      dragged=false; dropping=false;
+      if(bw.setPointerCapture && pid!==undefined){ try{ bw.setPointerCapture(pid); }catch(err){} }
     }
-    bw.addEventListener('pointerdown',tapRotate);
-    bw.addEventListener('touchstart',tapRotate,{passive:false});
+
+    function onMove(e){
+      if(!active || (pid!==null && e.pointerId!==pid)) return;
+      if(e.cancelable) e.preventDefault();
+      var dx=e.clientX-ax, dy=e.clientY-sy, s=step();
+
+      /* 横なぞり: しきい値を超えるたびに1マスずつ移動 */
+      while(Math.abs(dx)>=s){
+        var dir=dx>0?1:-1;
+        move(dir);
+        ax+=dir*s;
+        dx=e.clientX-ax;
+        dragged=true;
+      }
+
+      /* 下なぞり: 押している間だけ高速落下 */
+      if(!dropping && dy>s*1.4 && Math.abs(dy)>Math.abs(e.clientX-sx)){
+        dropping=true; softDrop=true; dragged=true;
+      }
+    }
+
+    function onUp(e){
+      if(!active) return;
+      if(pid!==null && e && e.pointerId!==undefined && e.pointerId!==pid) return;
+      active=false;
+      if(dropping){ softDrop=false; dropping=false; }
+      if(bw.releasePointerCapture && pid!==null){ try{ bw.releasePointerCapture(pid); }catch(err){} }
+      pid=null;
+      /* 動かさず短く触っただけ = タップ → 回転 */
+      if(!dragged && Date.now()-st<400){ rotate(); }
+    }
+
+    bw.addEventListener('pointerdown',onDown);
+    bw.addEventListener('pointermove',onMove);
+    bw.addEventListener('pointerup',onUp);
+    bw.addEventListener('pointercancel',onUp);
+    bw.addEventListener('lostpointercapture',onUp);
+    /* Pointer Events 非対応ブラウザ向けの保険 */
+    if(!window.PointerEvent){
+      bw.addEventListener('touchstart',function(e){ var t=e.changedTouches[0]; onDown({clientX:t.clientX,clientY:t.clientY,cancelable:e.cancelable,preventDefault:function(){e.preventDefault();}}); },{passive:false});
+      bw.addEventListener('touchmove',function(e){ var t=e.changedTouches[0]; onMove({clientX:t.clientX,clientY:t.clientY,cancelable:e.cancelable,preventDefault:function(){e.preventDefault();}}); },{passive:false});
+      bw.addEventListener('touchend',function(){ onUp({}); });
+      bw.addEventListener('touchcancel',function(){ onUp({}); });
+    }
   })();
 
   function lockPair(){
