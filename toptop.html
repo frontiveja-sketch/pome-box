@@ -146,6 +146,15 @@ opacity:0; pointer-events:none; transition:.24s cubic-bezier(.34,1.56,.64,1);
 }
 .label b{display:block; font-size:calc(var(--lbl) - 1px); font-weight:800; color:#8A2338; letter-spacing:.06em;}
 .tube.done .label{opacity:1; transform:translateX(-50%) scale(1);}
+.tube.vanish{
+animation:vanish .32s cubic-bezier(.4,0,.6,1) forwards;
+pointer-events:none;
+}
+@keyframes vanish{
+0%{transform:translateY(0) scale(1); opacity:1;}
+35%{transform:translateY(-8px) scale(1.05); opacity:1;}
+100%{transform:translateY(-26px) scale(.55); opacity:0;}
+}
 .controls{
 width:100%; max-width:560px; margin:16px auto 6px;
 display:flex; gap:10px; justify-content:center;
@@ -257,7 +266,7 @@ transform-origin:left center; box-shadow:0 0 8px rgba(0,0,0,.25); opacity:0;
 <button class="btn" id="hint"><span class="ic">💡</span>ヒント</button>
 <button class="btn" id="restart"><span class="ic">↺</span>やり直す</button>
 </div>
-<footer>同じワインだけを注ぎ足せます。1本1銘柄にそろえよう。 · <a href="./">POME BOX</a></footer>
+<footer>同じワインだけ注ぎ足せる。1本にそろうと瓶詰め完了、棚から消えます。ぜんぶ片付けたらクリア。 · <a href="./">POME BOX</a></footer>
 <div class="fx" id="fx" aria-hidden="true"></div>
 <div class="toast" id="toast"></div>
 <div class="overlay" id="overlay">
@@ -274,10 +283,10 @@ transform-origin:left center; box-shadow:0 0 8px rgba(0,0,0,.25); opacity:0;
 <script>
 const CAP = 4;
 const BOARD = 30;                // 棚は常に30本
-const MAX_COLORS = 26;           // 30本 = 26色 + 空4本（28色+空2本は生成に最大72秒かかり実用外）
+const MAX_COLORS = 14;           // 30本 = 14色 + 空16本。空きを多くして手詰まりを防ぐ
 function difficultyForLevel(l){
 const nColors = Math.min(2 + Math.round((l - 1) * (MAX_COLORS - 2) / 19), MAX_COLORS);
-const empties = BOARD - nColors;   // 4 at the cap, more (=easier) early on
+const empties = BOARD - nColors;   // 16 at the cap, more (=easier) early on
 return { nColors, empties, board: BOARD };
 }
 function clone(tubes){ return tubes.map(t => t.slice()); }
@@ -383,6 +392,7 @@ function tryMake(nc, em){
 for(let t=0;t<maxTries;t++){
 const tubes = deal(nc, rng, em);
 if(isSolved(tubes)) continue;                 // reject already-sorted
+if(tubes.some(x => x.length===CAP && isMonochrome(x))) continue;
 const path = solve(tubes, 160000);
 if(path) return { tubes, nColors:nc, empties:em, solutionLength:path.length };
 }
@@ -454,6 +464,7 @@ select(){ this.note(600, .07, 'triangle', .12); },
 pour(amt){ this.note(520,.09,'sine',.15); this.note(300+ (amt||1)*30,.14,'sine',.15,.06); },
 invalid(){ this.note(150,.14,'square',.10); },
 undo(){ this.note(360,.08,'triangle',.12); this.note(300,.08,'triangle',.10,.05); },
+complete(){ [660,880,1175].forEach((f,i)=>this.note(f,.20,'triangle',.15,i*0.06)); },
 win(){ [523,659,784,1047].forEach((f,i)=>this.note(f,.32,'triangle',.16,i*0.11)); },
 startBgm(){
 if(!soundOn || !this.ctx || this.bgmTimer) return;
@@ -629,17 +640,42 @@ const srcBody = srcEl.querySelector('.body');
 const dstBody = dstEl.querySelector('.body');
 for(let k=0;k<amt;k++) if(srcBody.lastElementChild) srcBody.removeChild(srcBody.lastElementChild);
 for(let k=0;k<amt;k++) dstBody.appendChild(makeSeg(color, true));
-if(state.tubes[to].length === CAP && isMonochrome(state.tubes[to])){
+const completed = state.tubes[to].length === CAP && isMonochrome(state.tubes[to]);
+if(completed){
 setLabel(dstEl, color);
-dstEl.classList.add('done');
+dstEl.classList.add('done');       // label pops = 瓶詰め完了
+audio.complete();
 }
 await wait(210);
 srcEl.classList.remove('pouring');   // bottle rights itself
+if(completed){
+await wait(230);                   // let the sealed label register
+dstEl.classList.add('vanish');     // then it clears off the shelf
+await wait(300);
+state.tubes.splice(to, 1);         // remove the finished bottle from the board
+}else{
 await wait(140);
+}
 lock = false;
-render();  // normalize DOM
+render();  // normalize DOM (board reflows; remaining bottles resize up)
 save();
-if(isSolved(state.tubes)) onWin();
+if(isCleared(state.tubes)){ onWin(); }
+else if(!hasAnyMove(state.tubes)){
+toast('打てる手がありません。「もどす」か「やり直す」でどうぞ');
+audio.invalid();
+}
+}
+function isCleared(tubes){
+return tubes.every(t => t.length === 0);
+}
+function hasAnyMove(tubes){
+for(let i=0;i<tubes.length;i++){
+if(!tubes[i].length) continue;
+for(let j=0;j<tubes.length;j++){
+if(i!==j && canPour(tubes, i, j)) return true;
+}
+}
+return false;
 }
 function drawStream(x1,y1,x2,y2,color){
 const dx = x2-x1, dy = y2-y1;
@@ -682,7 +718,7 @@ winShown = true;
 maxLevel = Math.max(maxLevel, state.level);
 saveMeta();
 audio.win();
-$('#winSub').textContent = `${state.moves} 手でクリア。全部きれいにそろいました。`;
+$('#winSub').textContent = `${state.moves} 手でクリア。棚をぜんぶ片付けました。`;
 setTimeout(showWin, 240);
 }
 function showWin(){
@@ -735,7 +771,7 @@ state = { level:s.level, tubes:s.tubes, initial:s.initial||clone(s.tubes),
 moves:s.moves||0, history:s.history||[] };
 sel = null; winShown = false;
 render(); resumed = true;
-if(isSolved(state.tubes)) onWin();
+if(isCleared(state.tubes)) onWin();
 }
 }catch(e){}
 if(!resumed) loadLevel(START_LEVEL);
