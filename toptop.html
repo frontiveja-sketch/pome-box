@@ -3,776 +3,407 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#1E1620">
-<meta name="description" content="いろ分けそそぎパズル。色ごとにボトルへ注ぎ分けて全部そろえよう。通信なし・ブラウザ内保存。POME BOX。">
-<title>とぽとぽ — ワインそそぎ分けパズル</title>
+<meta name="theme-color" content="#e8eef5">
+<meta name="description" content="試験管パズル。同じ色の水だけを注ぎ足して、1本ずつ色をそろえよう。広告なし・アンドゥ無制限・ブラウザ内保存。POME BOX。">
+<title>いろみずソート — 試験管パズル</title>
 <style>
 :root{
---bg:#1E1620; --bg2:#2A1E28; --shelf:#4A342E; --shelf2:#3A2822;
---cream:#F3EADE; --muted:#B9A88F; --gold:#D2A94E; --brand:#3E82D6;
---glass:rgba(243,234,222,.10); --glassEdge:rgba(243,234,222,.28);
---seg-h:30px; --body-w:46px; --neck-w:22px; --neck-h:30px;
---sh-h:18px; --foil-h:13px; --gap-x:12px; --gap-y:14px; --lbl:8px;
---c0:#3E0F20;  --c1:#6B1F42;  --c2:#93245F;  --c3:#B02742;  --c4:#D13A4E;
---c5:#8E2A2A;  --c6:#A6432E;  --c7:#7A3418;  --c8:#5A3418;  --c9:#8A5A24;
---c10:#B0672A; --c11:#E08A2E; --c12:#C98A4E; --c13:#EFA85C; --c14:#DFAF3A;
---c15:#E8C24A; --c16:#F0DE9B; --c17:#EDE7A8; --c18:#C6D95E; --c19:#DCE8B4;
---c20:#E6F0CE; --c21:#F2F5E4; --c22:#F4B9A6; --c23:#F2CBA6; --c24:#D14E7A;
---c25:#EE6B90;
+--bg1:#EEF3F8; --bg2:#DCE7F1; --ink:#2B3A4A; --muted:#7C8BA0;
+--rack:#C9B79B; --rack2:#B49F80; --rackShadow:rgba(60,45,25,.25);
+--glass:rgba(255,255,255,.42); --glassEdge:rgba(120,140,165,.55);
+--accent:#12A79C; --accentDark:#0C7E76; --gold:#E6B54F;
+--seg-h:34px; --tube-w:44px; --rim-w:52px; --gap-x:14px; --gap-y:16px; --lbl:8px;
+--c0:#E8432E; --c1:#F2913A; --c2:#F4C430; --c3:#43B02A;
+--c4:#17A2B8; --c5:#2E6FD6; --c6:#7E4FA0; --c7:#E86AA6;
+--c8:#9CCC3A; --c9:#8B5E3C; --c10:#8A93A3; --c11:#12BCB0;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0; height:100%;}
 body{
 font-family:"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-color:var(--cream);
-background:
-radial-gradient(120% 90% at 50% -10%, #3a2a33 0%, var(--bg2) 45%, var(--bg) 100%);
-min-height:100dvh;
-display:flex; flex-direction:column; align-items:center;
+color:var(--ink);
+background:radial-gradient(130% 100% at 50% 0%, #FBFDFF 0%, var(--bg1) 42%, var(--bg2) 100%);
+min-height:100dvh; display:flex; flex-direction:column; align-items:center;
 padding:env(safe-area-inset-top) 12px calc(env(safe-area-inset-bottom) + 12px);
-overflow-x:hidden;
-user-select:none; -webkit-user-select:none;
+overflow-x:hidden; user-select:none; -webkit-user-select:none;
 }
-header{width:100%; max-width:560px; margin:10px auto 4px; text-align:center;}
+header{width:100%; max-width:560px; margin:12px auto 2px; text-align:center; position:relative;}
 .title{
-font-weight:800; letter-spacing:.18em; margin:0;
-font-size:clamp(26px,7vw,38px);
-display:flex; gap:.14em; justify-content:center;
+font-weight:800; letter-spacing:.02em; margin:0; color:var(--ink);
+font-size:clamp(24px,6.5vw,34px);
 }
-.title span{display:inline-block; transform-origin:bottom;}
-.title span:nth-child(2),.title span:nth-child(4){color:var(--gold);}
-.sub{margin:2px 0 0; font-size:12px; letter-spacing:.14em; color:var(--muted);}
+.title .drop{color:var(--accent);}
+.sub{margin:3px 0 0; font-size:12px; letter-spacing:.14em; color:var(--muted);}
+.settings{position:absolute; top:0; right:0; display:flex; gap:8px;}
+.tgl{
+width:36px; height:36px; border-radius:50%; background:#fff; border:1.5px solid var(--glassEdge);
+color:var(--ink); font-size:16px; cursor:pointer; line-height:1; display:flex; align-items:center; justify-content:center;
+box-shadow:0 1px 3px rgba(40,60,80,.12); transition:transform .08s, opacity .15s, background .15s;
+}
+.tgl:active{transform:scale(.92);}
+.tgl[aria-pressed="false"]{opacity:.45;}
+.tgl.on{background:#E7F6F4; border-color:var(--accent);}
 .hud{
-width:100%; max-width:560px; margin:14px auto 6px;
+width:100%; max-width:560px; margin:14px auto 4px;
 display:flex; justify-content:space-between; align-items:center; gap:10px;
 font-variant-numeric:tabular-nums;
 }
-.stat{display:flex; flex-direction:column; line-height:1.1;}
-.stat b{font-size:19px; font-weight:800;}
+.stat{display:flex; flex-direction:column; line-height:1.05;}
+.stat b{font-size:20px; font-weight:800; color:var(--ink);}
 .stat small{font-size:10px; letter-spacing:.12em; color:var(--muted);}
-.stat.r{text-align:right;}
-main{
-flex:1; width:100%; max-width:560px;
-display:flex; align-items:center; justify-content:center;
-}
-.shelf{
-width:100%;
-background:linear-gradient(180deg,var(--shelf) 0%,var(--shelf2) 100%);
-border-radius:16px;
-padding:22px 12px 14px;
-box-shadow:inset 0 2px 0 rgba(255,255,255,.10), 0 10px 30px rgba(0,0,0,.35);
-}
+.stat.c{text-align:center;} .stat.r{text-align:right;}
+main{flex:1; width:100%; max-width:560px; display:flex; align-items:center; justify-content:center;}
 .rack{
-display:flex; flex-wrap:wrap; justify-content:center;
+width:100%; display:flex; flex-wrap:wrap; justify-content:center;
 gap:var(--gap-y) var(--gap-x);
+padding:20px 12px 16px;
 }
 .tube{
-background:none; border:0; padding:6px 2px 0; cursor:pointer;
+background:none; border:0; padding:8px 2px 0; cursor:pointer; position:relative;
 display:flex; flex-direction:column; align-items:center;
 transition:transform .16s cubic-bezier(.34,1.56,.64,1);
-position:relative;
 }
-.tube:focus-visible{outline:2px solid var(--gold); outline-offset:4px; border-radius:8px;}
-.tube .foil{
-width:calc(var(--neck-w) + 4px); height:var(--foil-h); border-radius:3px 3px 2px 2px;
-background:linear-gradient(180deg,#6E1E2B 0%,#4A1220 60%,#2E0B14 100%);
-box-shadow:inset 0 -3px 0 rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.18);
-margin-bottom:-2px; position:relative; z-index:2;
+.tube:focus-visible{outline:2px solid var(--accent); outline-offset:4px; border-radius:8px;}
+.tube .rim{
+width:var(--rim-w); height:8px; border-radius:6px 6px 3px 3px;
+background:linear-gradient(180deg,rgba(255,255,255,.9),var(--glass));
+border:1.5px solid var(--glassEdge); border-bottom:0; margin-bottom:-2px; z-index:2;
 }
-.tube .foil::after{ /* foil trim ring */
-content:""; position:absolute; left:0; right:0; bottom:3px; height:2px;
-background:rgba(210,169,78,.55);
-}
-.tube .neck{
-width:var(--neck-w); height:var(--neck-h);
-background:linear-gradient(90deg,
-rgba(90,120,80,.30) 0%, rgba(243,234,222,.16) 38%,
-rgba(243,234,222,.05) 62%, rgba(40,60,40,.34) 100%);
-box-shadow:inset 0 0 0 1.5px var(--glassEdge);
-border-radius:4px 4px 0 0;
-}
-.tube .shoulder{
-width:var(--body-w); height:var(--sh-h); margin-top:-1px;
-background:linear-gradient(90deg,
-rgba(90,120,80,.30) 0%, rgba(243,234,222,.16) 38%,
-rgba(243,234,222,.05) 62%, rgba(40,60,40,.34) 100%);
-clip-path:polygon(26% 0, 74% 0, 100% 100%, 0 100%);
-}
-.tube .body{
-width:var(--body-w); height:calc(var(--seg-h) * 4);
-background:linear-gradient(90deg,
-rgba(90,120,80,.26) 0%, rgba(243,234,222,.12) 38%,
-rgba(243,234,222,.04) 62%, rgba(40,60,40,.30) 100%);
-box-shadow:inset 0 0 0 1.5px var(--glassEdge);
-border-radius:2px 2px 9px 9px;
-overflow:hidden; position:relative; margin-top:-1px;
+.tube .glass{
+width:var(--tube-w); height:calc(var(--seg-h) * 4 + 6px);
+background:var(--glass);
+border:1.5px solid var(--glassEdge); border-top:0;
+border-radius:3px 3px 22px 22px;
+overflow:hidden; position:relative;
 display:flex; flex-direction:column-reverse;
+box-shadow:inset -6px 0 10px rgba(70,90,110,.10), inset 6px 0 8px rgba(255,255,255,.35);
+backdrop-filter:blur(.5px);
 }
-.tube .body::after{ /* glass highlight */
-content:""; position:absolute; top:6px; left:7px; width:6px; height:62%;
-border-radius:6px; z-index:3; pointer-events:none;
-background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0));
+.tube .glass::after{ /* vertical glass highlight */
+content:""; position:absolute; top:8px; left:8px; width:6px; height:70%; z-index:3;
+border-radius:6px; pointer-events:none;
+background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,0));
 }
-.tube .body::before{ /* punt (bottom dimple) */
-content:""; position:absolute; z-index:3; bottom:-7px; left:50%;
-width:66%; height:14px; transform:translateX(-50%);
-border-radius:50%; pointer-events:none;
-background:radial-gradient(ellipse at center, rgba(0,0,0,.42), rgba(0,0,0,0) 70%);
+.seg{ height:var(--seg-h); width:100%; position:relative; transform-origin:bottom; }
+.seg:last-child{ } /* top segment */
+.seg .glyph{
+position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+font-size:15px; color:#fff; mix-blend-mode:difference; opacity:.9; pointer-events:none;
 }
-.seg{
-height:var(--seg-h); width:100%;
-transform-origin:bottom;
-box-shadow:inset -5px 0 9px rgba(0,0,0,.20), inset 5px 0 7px rgba(0,0,0,.10);
-}
+body.pat .seg .glyph{display:flex;}
 .seg.grow{animation:grow .22s cubic-bezier(.2,.8,.3,1);}
 @keyframes grow{from{transform:scaleY(.05); opacity:.5;} to{transform:scaleY(1); opacity:1;}}
-.tube.sel{transform:translateY(-18px);}
-.tube.sel .body{box-shadow:inset 0 0 0 2px var(--gold), 0 0 12px rgba(210,169,78,.35);}
-.tube.pouring{
-transform:translateY(-46px) rotate(calc(var(--dir,1) * -34deg));
-transition:transform .16s ease; z-index:6;
+.tube.sel{transform:translateY(-16px);}
+.tube.sel .glass{border-color:var(--accent); box-shadow:0 0 0 2px rgba(18,167,156,.4), inset -6px 0 10px rgba(70,90,110,.10);}
+.tube.pouring{transform:translateY(-46px) rotate(calc(var(--dir,1) * -32deg)); transition:transform .16s ease; z-index:6;}
+.tube.hintf .glass{animation:hintf .5s ease 2;}
+@keyframes hintf{0%,100%{box-shadow:inset -6px 0 10px rgba(70,90,110,.10);} 50%{box-shadow:0 0 0 3px var(--gold);}}
+.tube.done .rim{background:linear-gradient(180deg,var(--gold),#c99a34); border-color:#b98f30;}
+.tube.done .glass::before{
+content:"✓"; position:absolute; z-index:4; top:3px; left:50%; transform:translateX(-50%);
+font-size:12px; font-weight:800; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.25);
 }
-.tube.hintf .body{animation:hintf .5s ease 2;}
-@keyframes hintf{0%,100%{box-shadow:inset 0 0 0 1.5px var(--glassEdge);} 50%{box-shadow:inset 0 0 0 3px var(--gold);}}
-.label{
-position:absolute; z-index:4; left:50%; bottom:14px;
-transform:translateX(-50%) scale(.6);
-width:calc(var(--body-w) - 8px); padding:3px 1px;
-background:linear-gradient(180deg,#F7F0E2,#E4D8C2);
-color:#3A2822; font-size:var(--lbl); line-height:1.15; font-weight:700;
-text-align:center; border-radius:2px; letter-spacing:.02em;
-box-shadow:0 1px 3px rgba(0,0,0,.35);
-opacity:0; pointer-events:none; transition:.24s cubic-bezier(.34,1.56,.64,1);
-}
-.label b{display:block; font-size:calc(var(--lbl) - 1px); font-weight:800; color:#8A2338; letter-spacing:.06em;}
-.tube.done .label{opacity:1; transform:translateX(-50%) scale(1);}
-.tube.vanish{
-animation:vanish .32s cubic-bezier(.4,0,.6,1) forwards;
-pointer-events:none;
-}
-@keyframes vanish{
-0%{transform:translateY(0) scale(1); opacity:1;}
-35%{transform:translateY(-8px) scale(1.05); opacity:1;}
-100%{transform:translateY(-26px) scale(.55); opacity:0;}
-}
-.controls{
-width:100%; max-width:560px; margin:16px auto 6px;
-display:flex; gap:10px; justify-content:center;
-}
+.fx{position:fixed; inset:0; z-index:5; pointer-events:none; overflow:visible;}
+.stream{position:fixed; height:8px; border-radius:6px; transform-origin:left center; box-shadow:0 0 8px rgba(0,0,0,.15); opacity:0;}
+.stream.go{animation:stream .34s ease forwards;}
+@keyframes stream{0%{opacity:0; clip-path:inset(0 100% 0 0);} 22%{opacity:1; clip-path:inset(0 0 0 0);} 78%{opacity:1; clip-path:inset(0 0 0 0);} 100%{opacity:0; clip-path:inset(0 0 0 90%);}}
+.controls{width:100%; max-width:560px; margin:14px auto 6px; display:flex; gap:9px; justify-content:center;}
 .btn{
-flex:1; max-width:170px;
-background:var(--glass); color:var(--cream);
-border:1.5px solid var(--glassEdge); border-radius:12px;
-padding:12px 8px; font-size:14px; font-weight:700; letter-spacing:.06em;
-cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
-transition:transform .08s, background .15s;
+flex:1; max-width:150px; background:#fff; color:var(--ink);
+border:1.5px solid var(--glassEdge); border-radius:13px; padding:12px 6px;
+font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer;
+display:flex; flex-direction:column; align-items:center; gap:3px;
+box-shadow:0 2px 5px rgba(40,60,80,.10); transition:transform .08s, background .15s;
 }
 .btn:active{transform:translateY(1px) scale(.98);}
 .btn:disabled{opacity:.4; cursor:default;}
-.btn .ic{font-size:16px;}
+.btn .ic{font-size:19px; line-height:1;}
+.btn .cnt{font-size:10px; color:var(--muted); font-weight:700;}
 .toast{
-position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 84px);
-transform:translateX(-50%) translateY(12px);
-background:#000a; color:var(--cream); padding:10px 16px; border-radius:20px;
-font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:40;
-border:1px solid var(--glassEdge); max-width:90vw; text-align:center;
+position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 96px); transform:translateX(-50%) translateY(12px);
+background:#2B3A4Aee; color:#fff; padding:10px 16px; border-radius:20px; font-size:13px;
+opacity:0; pointer-events:none; transition:.25s; z-index:40; max-width:90vw; text-align:center;
 }
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-.overlay{
-position:fixed; inset:0; z-index:50; display:none;
-align-items:center; justify-content:center; padding:20px;
-background:radial-gradient(circle at 50% 30%, #2a1e28ee, #1e1620f6);
-backdrop-filter:blur(3px);
-}
+.overlay{position:fixed; inset:0; z-index:50; display:none; align-items:center; justify-content:center; padding:20px;
+background:rgba(43,58,74,.42); backdrop-filter:blur(3px);}
 .overlay.show{display:flex; animation:fade .3s ease;}
 @keyframes fade{from{opacity:0;} to{opacity:1;}}
-.card{
-background:linear-gradient(180deg,#33242e,#241a22);
-border:1.5px solid var(--glassEdge); border-radius:20px;
-padding:28px 26px; text-align:center; max-width:340px; width:100%;
-box-shadow:0 20px 60px #000a;
-}
-.card .k{font-size:44px; margin-bottom:6px;}
-.card h2{margin:0 0 4px; font-size:22px; letter-spacing:.08em;}
-.card p{margin:0 0 20px; color:var(--muted); font-size:13px;}
-.card .row{display:flex; gap:10px;}
-.card .btn.primary{
-background:linear-gradient(180deg,#e6b64f,#c9902f); color:#241a22; border-color:transparent;
-}
-footer{margin:18px auto 4px; font-size:11px; color:var(--muted); letter-spacing:.1em; text-align:center;}
-footer a{color:var(--muted);}
-header{position:relative;}
-.settings{position:absolute; top:2px; right:0; display:flex; gap:8px;}
-.tgl{
-width:38px; height:38px; border-radius:50%;
-background:var(--glass); border:1.5px solid var(--glassEdge);
-color:var(--cream); font-size:17px; cursor:pointer; line-height:1;
-display:flex; align-items:center; justify-content:center;
-transition:transform .08s, background .15s, opacity .15s;
-}
-.tgl:active{transform:scale(.92);}
-.tgl[aria-pressed="false"]{opacity:.42;}
-.tgl.on{background:rgba(210,169,78,.22); border-color:var(--gold);}
-.seg{position:relative;}
-.seg .glyph{
-position:absolute; inset:0; display:none;
-align-items:center; justify-content:center;
-font-size:15px; color:#fff; mix-blend-mode:difference; opacity:.92;
-pointer-events:none;
-}
-body.pat .seg .glyph{display:flex;}
-.fx{position:fixed; inset:0; z-index:5; pointer-events:none; overflow:visible;}
-.stream{
-position:fixed; height:8px; border-radius:6px;
-transform-origin:left center; box-shadow:0 0 8px rgba(0,0,0,.25); opacity:0;
-}
-.stream.go{animation:stream .34s ease forwards;}
-@keyframes stream{
-0%{opacity:0; clip-path:inset(0 100% 0 0);}
-22%{opacity:1; clip-path:inset(0 0 0 0);}
-78%{opacity:1; clip-path:inset(0 0 0 0);}
-100%{opacity:0; clip-path:inset(0 0 0 90%);}
-}
+.card{background:#fff; border-radius:22px; padding:28px 26px; text-align:center; max-width:330px; width:100%;
+box-shadow:0 24px 60px rgba(30,45,60,.35);}
 .card.pop{animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
 @keyframes pop{from{transform:scale(.8); opacity:0;} to{transform:scale(1); opacity:1;}}
-@media (prefers-reduced-motion:reduce){
-*{animation:none !important; transition:none !important;}
-}
-@media (max-width:400px){
-:root{--seg-h:23px; --body-w:36px; --neck-w:17px; --neck-h:22px;
---sh-h:14px; --foil-h:10px; --gap-x:7px; --gap-y:10px; --lbl:7px;}
-}
+.card .k{font-size:42px; margin-bottom:6px;}
+.card h2{margin:0 0 4px; font-size:22px; color:var(--ink);}
+.card p{margin:0 0 20px; color:var(--muted); font-size:13px;}
+.card .row{display:flex; gap:10px;}
+.card .btn.primary{flex-direction:row; background:linear-gradient(180deg,var(--accent),var(--accentDark)); color:#fff; border-color:transparent; box-shadow:0 6px 16px rgba(12,126,118,.35);}
+.card .btn{flex-direction:row;}
+footer{margin:16px auto 4px; font-size:11px; color:var(--muted); letter-spacing:.08em; text-align:center;}
+footer a{color:var(--muted);}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important; transition:none !important;} }
 </style>
 </head>
 <body>
 <header>
 <div class="settings">
-<button class="tgl" id="tSound" aria-pressed="true"  title="音のオン/オフ">🔊</button>
-<button class="tgl" id="tPat"   aria-pressed="false" title="色に記号をつける（色覚サポート）">◐</button>
+<button class="tgl on" id="tSound" aria-pressed="true" title="音のオン/オフ">🔊</button>
+<button class="tgl" id="tPat" aria-pressed="false" title="色に記号をつける（色覚サポート）">◐</button>
 </div>
-<h1 class="title" aria-label="とぽとぽ"><span>と</span><span>ぽ</span><span>と</span><span>ぽ</span></h1>
-<p class="sub">ワインの色を、注ぎ分ける。</p>
+<h1 class="title">いろみず<span class="drop">ソート</span></h1>
+<p class="sub">試験管パズル ／ 同じ色をそろえよう</p>
 </header>
 <div class="hud">
-<div class="stat"><b id="lv">1</b><small>ステージ</small></div>
-<div class="stat" style="text-align:center"><b id="mv">0</b><small>てすう</small></div>
+<div class="stat"><b id="lv">1</b><small>レベル</small></div>
+<div class="stat c"><b id="mv">0</b><small>てすう</small></div>
 <div class="stat r"><b id="best">1</b><small>さいこう</small></div>
 </div>
-<main>
-<div class="shelf"><div class="rack" id="rack" aria-label="ボトル棚"></div></div>
-</main>
+<main><div class="rack" id="rack" aria-label="試験管"></div></main>
 <div class="controls">
 <button class="btn" id="undo"><span class="ic">↩</span>もどす</button>
+<button class="btn" id="addtube"><span class="ic">＋</span>試験管<span class="cnt" id="addcnt">×2</span></button>
 <button class="btn" id="hint"><span class="ic">💡</span>ヒント</button>
-<button class="btn" id="restart"><span class="ic">↺</span>やり直す</button>
+<button class="btn" id="restart"><span class="ic">↺</span>最初から</button>
 </div>
-<footer>同じワインだけ注ぎ足せる。1本にそろうと瓶詰め完了、棚から消えます。ぜんぶ片付けたらクリア。 · <a href="./">POME BOX</a></footer>
+<footer>同じ色の水だけ注ぎ足せます。1本ずつ色をそろえて全部そろえたらクリア。 · <a href="./">POME BOX</a></footer>
 <div class="fx" id="fx" aria-hidden="true"></div>
 <div class="toast" id="toast"></div>
 <div class="overlay" id="overlay">
 <div class="card">
-<div class="k">🍷</div>
-<h2 id="winTitle">そそぎ分け、完了。</h2>
-<p id="winSub">全部きれいにそろいました。</p>
+<div class="k">🧪</div>
+<h2 id="winTitle">きれいにそろいました！</h2>
+<p id="winSub"></p>
 <div class="row">
-<button class="btn" id="replay">この面をもう一度</button>
-<button class="btn primary" id="next">つぎへ →</button>
+<button class="btn" id="replay">もう一度</button>
+<button class="btn primary" id="next">つぎのレベル →</button>
 </div>
 </div>
 </div>
 <script>
 const CAP = 4;
-const BOARD = 30;                // 棚は常に30本
-const MAX_COLORS = 14;           // 30本 = 14色 + 空16本。空きを多くして手詰まりを防ぐ
+const EMPTIES = 2;               // classic: always 2 spare tubes
 function difficultyForLevel(l){
-const nColors = Math.min(2 + Math.round((l - 1) * (MAX_COLORS - 2) / 19), MAX_COLORS);
-const empties = BOARD - nColors;   // 16 at the cap, more (=easier) early on
-return { nColors, empties, board: BOARD };
+const nColors = Math.min(3 + Math.floor((l - 1) / 2), 12);
+return { nColors, empties: EMPTIES };
 }
-function clone(tubes){ return tubes.map(t => t.slice()); }
-function topColor(t){ return t.length ? t[t.length-1] : null; }
-function topRun(t){
-if(!t.length) return 0;
-const c = t[t.length-1];
-let n = 1;
-for(let k = t.length-2; k>=0 && t[k]===c; k--) n++;
-return n;
-}
-function freeSpace(t){ return CAP - t.length; }
-function isMonochrome(t){
-if(!t.length) return true;
-return t.every(x => x === t[0]);
-}
+const clone = t => t.map(x => x.slice());
+const topColor = t => t.length ? t[t.length-1] : null;
+function topRun(t){ if(!t.length) return 0; const c=t[t.length-1]; let n=1; for(let k=t.length-2;k>=0&&t[k]===c;k--)n++; return n; }
+const freeSpace = t => CAP - t.length;
+const isMono = t => t.length ? t.every(x=>x===t[0]) : true;
 function canPour(tubes, from, to){
-if(from === to) return false;
-const s = tubes[from], d = tubes[to];
+if(from===to) return false;
+const s=tubes[from], d=tubes[to];
 if(!s.length) return false;
-if(d.length >= CAP) return false;
-if(d.length && d[d.length-1] !== s[s.length-1]) return false;
+if(d.length>=CAP) return false;
+if(d.length && d[d.length-1]!==s[s.length-1]) return false;
 return true;
 }
 function pour(tubes, from, to){
-if(!canPour(tubes, from, to)) return 0;
-const amt = Math.min(topRun(tubes[from]), freeSpace(tubes[to]));
-const col = tubes[from][tubes[from].length-1];
+if(!canPour(tubes,from,to)) return 0;
+const amt=Math.min(topRun(tubes[from]), freeSpace(tubes[to]));
+const col=tubes[from][tubes[from].length-1];
 for(let i=0;i<amt;i++){ tubes[to].push(col); tubes[from].pop(); }
 return amt;
 }
 function isSolved(tubes){
-return tubes.every(t => t.length===0 || (t.length===CAP && isMonochrome(t)));
+return tubes.every(t => t.length===0 || (t.length===CAP && isMono(t)));
 }
-function solve(tubesIn, nodeCap = 200000){
-const visited = new Set();
-let nodes = 0;
-function canon(ts){
-return ts.map(t => t.join(',')).sort().join('|');
-}
-function solved(ts){
-return ts.every(t => t.length===0 || (t.length===CAP && t.every(x=>x===t[0])));
-}
+function solve(tubesIn, nodeCap=200000){
+const visited=new Set(); let nodes=0;
+const canon=ts=>ts.map(t=>t.join(',')).sort().join('|');
+const solved=ts=>ts.every(t=>t.length===0||(t.length===CAP&&t.every(x=>x===t[0])));
 function dfs(ts){
-if(++nodes > nodeCap) return null;
+if(++nodes>nodeCap) return null;
 if(solved(ts)) return [];
-const key = canon(ts);
-if(visited.has(key)) return null;
-visited.add(key);
-const moves = [];
+const key=canon(ts); if(visited.has(key)) return null; visited.add(key);
+const moves=[];
 for(let i=0;i<ts.length;i++){
-const from = ts[i];
-if(!from.length) continue;
-if(from.length===CAP && from.every(x=>x===from[0])) continue; // completed
-const col = from[from.length-1];
-const mono = from.every(x=>x===col);
-let run=1; for(let k=from.length-2;k>=0 && from[k]===col;k--) run++;
+const from=ts[i]; if(!from.length) continue;
+if(from.length===CAP && from.every(x=>x===from[0])) continue;
+const col=from[from.length-1], mono=from.every(x=>x===col);
+let run=1; for(let k=from.length-2;k>=0&&from[k]===col;k--) run++;
 for(let j=0;j<ts.length;j++){
-if(i===j) continue;
-const to = ts[j];
+if(i===j) continue; const to=ts[j];
 if(to.length>=CAP) continue;
 if(to.length && to[to.length-1]!==col) continue;
-if(to.length===0 && mono) continue; // pointless relocation of a pure column
-const space = CAP - to.length;
-const amt = Math.min(run, space);
-let score = 0;
-if(to.length) score += 5;                       // onto same-color pile
-if(to.length + amt === CAP) score += 10;        // completes destination
-if(to.length===0) score -= 2;                   // using an empty is a cost
+if(to.length===0 && mono) continue;
+const amt=Math.min(run, CAP-to.length);
+let score=0; if(to.length) score+=5; if(to.length+amt===CAP) score+=10; if(to.length===0) score-=2;
 moves.push({i,j,amt,score});
 }
 }
 moves.sort((a,b)=>b.score-a.score);
 for(const m of moves){
-const nt = ts.map(t=>t.slice());
+const nt=ts.map(t=>t.slice());
 for(let c=0;c<m.amt;c++) nt[m.j].push(nt[m.i].pop());
-const res = dfs(nt);
-if(res!==null){ res.unshift([m.i,m.j]); return res; }
+const r=dfs(nt); if(r!==null){ r.unshift([m.i,m.j]); return r; }
 }
 return null;
 }
 return dfs(tubesIn.map(t=>t.slice()));
 }
-function shuffle(a, rng){
-for(let i=a.length-1;i>0;i--){
-const j = Math.floor(rng()*(i+1));
-[a[i],a[j]] = [a[j],a[i]];
-}
-return a;
-}
-function deal(nColors, rng, empties = 2){
-const pool = [];
-for(let c=0;c<nColors;c++) for(let k=0;k<CAP;k++) pool.push(c);
-shuffle(pool, rng);
-const tubes = [];
-for(let c=0;c<nColors;c++) tubes.push(pool.slice(c*CAP,(c+1)*CAP));
+function shuffle(a,rng){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function deal(nColors, rng, empties=EMPTIES){
+const pool=[]; for(let c=0;c<nColors;c++) for(let k=0;k<CAP;k++) pool.push(c);
+shuffle(pool,rng);
+const tubes=[]; for(let c=0;c<nColors;c++) tubes.push(pool.slice(c*CAP,(c+1)*CAP));
 for(let e=0;e<empties;e++) tubes.push([]);
 return tubes;
 }
-function generateLevel(level, rng = Math.random, maxTries = 90){
+function generateLevel(level, rng=Math.random, maxTries=120){
 let { nColors, empties } = difficultyForLevel(level);
-function tryMake(nc, em){
+while(nColors>=2){
 for(let t=0;t<maxTries;t++){
-const tubes = deal(nc, rng, em);
-if(isSolved(tubes)) continue;                 // reject already-sorted
-if(tubes.some(x => x.length===CAP && isMonochrome(x))) continue;
-const path = solve(tubes, 160000);
-if(path) return { tubes, nColors:nc, empties:em, solutionLength:path.length };
+const tubes=deal(nColors, rng, empties);
+if(isSolved(tubes)) continue;
+const path=solve(tubes, 160000);
+if(path) return { tubes, nColors, empties, solutionLength:path.length };
 }
-return null;
+nColors--;
 }
-let r = tryMake(nColors, empties);
-if(r) return r;
-for(let nc = nColors - 1; nc >= 2; nc--){
-r = tryMake(nc, BOARD - nc);
-if(r) return r;
+return { tubes: deal(3,rng,empties), nColors:3, empties, solutionLength:null };
 }
-return { tubes: deal(3, rng, BOARD - 3), nColors:3, empties:BOARD - 3, solutionLength:null };
-}
-/* =========================================================
-UI layer v2 — verified core (CAP, generateLevel, canPour,
-pour, isSolved, solve, clone, isMonochrome …)
-adds: pour-stream animation, colorblind glyphs, sound/BGM.
-========================================================= */
-const SAVE_KEY = 'toptop_v2';
-const META_KEY = 'toptop_meta2';
-const START_LEVEL = 20;          // ← 開始ステージ。ここを変えるだけで初期難度を調整可
-const $ = s => document.querySelector(s);
-const GLYPHS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬',
-'⑭','⑮','⑯','⑰','⑱','⑲','⑳','★','☆','◆','◇','▲','△'];
-const WINES = [
-['黒紫','ヴィンテージポート'], ['深紫','カベルネ'],     ['紫紅','マルベック'],
-['深ルビー','メルロー'],       ['ルビー','ピノ・ノワール'], ['深紅','サンジョヴェーゼ'],
-['ガーネット','ネッビオーロ'], ['赤茶','タウニー'],     ['濃茶','マルムジー'],
-['トウニー','シェリー'],       ['琥珀茶','マデイラ'],   ['琥珀','オレンジ'],
-['タン','アンバー'],           ['淡琥珀','パイユ'],     ['黄金','シャルドネ'],
-['濃金','ソーテルヌ'],         ['麦わら','シャンパン'], ['淡レモン','リースリング'],
-['青緑','ソーヴィニヨン'],     ['淡黄緑','ミュスカデ'], ['ごく淡緑','ヴェルデ'],
-['ほぼ無色','ピノ・グリージョ'], ['淡サーモン','プロヴァンス'], ['玉ねぎ皮','ペルール'],
-['濃ロゼ','クレレ'],           ['薔薇','ロゼ・ダンジュ']
-];
-let state = null;      // {level, tubes, initial, moves, history:[]}
-let sel = null;
-let lock = false;
-let winShown = false;
-let maxLevel = 1;
-let soundOn = true;
-let patternOn = true;   // 18色は色だけだと紛らわしいので既定でオン
-const rack = $('#rack');
-const fx   = $('#fx');
-const audio = {
-ctx:null, master:null, bgmTimer:null, step:0,
-ensure(){
-if(this.ctx) { if(this.ctx.state==='suspended') this.ctx.resume(); return; }
-const AC = window.AudioContext || window.webkitAudioContext;
-if(!AC) return;
-this.ctx = new AC();
-this.master = this.ctx.createGain();
-this.master.gain.value = 0.9;
-this.master.connect(this.ctx.destination);
-},
-note(freq, dur=0.12, type='sine', vol=0.16, at=0){
-if(!soundOn || !this.ctx) return;
-const t = this.ctx.currentTime + at;
-const o = this.ctx.createOscillator();
-const g = this.ctx.createGain();
-o.type = type; o.frequency.value = freq;
-g.gain.setValueAtTime(0, t);
-g.gain.linearRampToValueAtTime(vol, t+0.012);
-g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-o.connect(g); g.connect(this.master);
-o.start(t); o.stop(t+dur+0.02);
-},
-select(){ this.note(600, .07, 'triangle', .12); },
-pour(amt){ this.note(520,.09,'sine',.15); this.note(300+ (amt||1)*30,.14,'sine',.15,.06); },
+const SAVE_KEY='watersort_v1', META_KEY='watersort_meta';
+const START_LEVEL=1;
+const ADD_TUBES_PER_LEVEL=2;
+const GLYPHS=['●','○','▲','△','■','□','◆','◇','★','☆','▼','▽'];
+const $=s=>document.querySelector(s);
+let state=null;          // {level, tubes, initial, moves, history:[], addsLeft}
+let sel=null, lock=false, winShown=false, maxLevel=1;
+let soundOn=true, patternOn=false;
+const rack=$('#rack'), fx=$('#fx');
+const audio={
+ctx:null, master:null,
+ensure(){ if(this.ctx){ if(this.ctx.state==='suspended') this.ctx.resume(); return; }
+const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+this.ctx=new AC(); this.master=this.ctx.createGain(); this.master.gain.value=.9; this.master.connect(this.ctx.destination); },
+note(f,d=.12,type='sine',v=.16,at=0){ if(!soundOn||!this.ctx) return;
+const t=this.ctx.currentTime+at, o=this.ctx.createOscillator(), g=this.ctx.createGain();
+o.type=type; o.frequency.value=f; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+.012);
+g.gain.exponentialRampToValueAtTime(.0001,t+d); o.connect(g); g.connect(this.master); o.start(t); o.stop(t+d+.02); },
+select(){ this.note(600,.07,'triangle',.12); },
+pour(a){ this.note(520,.09,'sine',.15); this.note(300+(a||1)*30,.14,'sine',.15,.06); },
 invalid(){ this.note(150,.14,'square',.10); },
 undo(){ this.note(360,.08,'triangle',.12); this.note(300,.08,'triangle',.10,.05); },
-complete(){ [660,880,1175].forEach((f,i)=>this.note(f,.20,'triangle',.15,i*0.06)); },
-win(){ [523,659,784,1047].forEach((f,i)=>this.note(f,.32,'triangle',.16,i*0.11)); },
-startBgm(){
-if(!soundOn || !this.ctx || this.bgmTimer) return;
-const scale=[392,440,523,587,659,784]; // soft pentatonic-ish
-const tick=()=>{
-if(!soundOn){ return; }
-const f = scale[this.step % scale.length];
-this.note(f, 1.4, 'triangle', 0.045);
-if(this.step % 4 === 0) this.note(f/2, 1.6, 'sine', 0.03);
-this.step++;
+done(){ [660,880,1175].forEach((f,i)=>this.note(f,.20,'triangle',.15,i*.06)); },
+win(){ [523,659,784,1047].forEach((f,i)=>this.note(f,.32,'triangle',.16,i*.11)); },
+add(){ this.note(440,.10,'sine',.14); this.note(660,.12,'sine',.12,.06); }
 };
-tick();
-this.bgmTimer = setInterval(tick, 1550);
-},
-stopBgm(){ if(this.bgmTimer){ clearInterval(this.bgmTimer); this.bgmTimer=null; } }
-};
-function save(){
-try{
-localStorage.setItem(SAVE_KEY, JSON.stringify({
-level:state.level, tubes:state.tubes, initial:state.initial,
-moves:state.moves, history:state.history.slice(-200)
-}));
-}catch(e){}
-}
-function saveMeta(){
-try{ localStorage.setItem(META_KEY, JSON.stringify({maxLevel, soundOn, patternOn})); }catch(e){}
-}
-function loadMeta(){
-try{
-const m = JSON.parse(localStorage.getItem(META_KEY));
-if(m){
-if(m.maxLevel) maxLevel = m.maxLevel;
-if(typeof m.soundOn === 'boolean') soundOn = m.soundOn;
-if(typeof m.patternOn === 'boolean') patternOn = m.patternOn;
-}
-}catch(e){}
-}
-/* ---------------- responsive board fitting ----------------
-20 bottles must fit without scrolling, on phones too.
-Scales the CSS vars down until rows x bottle-height fits. */
-const BASE = { seg:30, body:46, neckW:22, neckH:30, sh:18, foil:13, gapX:12, gapY:14 };
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify({level:state.level,tubes:state.tubes,initial:state.initial,moves:state.moves,history:state.history.slice(-200),addsLeft:state.addsLeft})); }catch(e){} }
+function saveMeta(){ try{ localStorage.setItem(META_KEY, JSON.stringify({maxLevel,soundOn,patternOn})); }catch(e){} }
+function loadMeta(){ try{ const m=JSON.parse(localStorage.getItem(META_KEY)); if(m){ if(m.maxLevel)maxLevel=m.maxLevel; if(typeof m.soundOn==='boolean')soundOn=m.soundOn; if(typeof m.patternOn==='boolean')patternOn=m.patternOn; } }catch(e){} }
+const BASE={seg:34,tube:44,rim:52,gapX:14,gapY:16,rimH:8};
 function fitBoard(count){
-const shelf = document.querySelector('.shelf');
-const availW = Math.max(200, (shelf && shelf.clientWidth ? shelf.clientWidth : 536) - 24);
-const rackTop = rack.getBoundingClientRect ? rack.getBoundingClientRect().top : 0;
-const vh = window.innerHeight || 720;
-const reserve = 132;                                  // controls + footer + padding
-const availH = Math.max(220, (rackTop > 0 ? vh - rackTop : vh - 250) - reserve);
-let chosen = 0.5;
-for(let s = 1.0; s >= 0.5; s -= 0.04){
-const bw   = BASE.body * s;
-const seg  = BASE.seg  * s;
-const gapX = BASE.gapX * s, gapY = BASE.gapY * s;
-const bh   = (BASE.foil + BASE.neckH + BASE.sh) * s + seg * CAP;
-const cols = Math.max(1, Math.floor((availW + gapX) / (bw + gapX)));
-const rows = Math.ceil(count / cols);
-if(rows * bh + (rows - 1) * gapY <= availH){ chosen = s; break; }
+const availW=Math.max(220,(rack.clientWidth||536)-24);
+const vh=window.innerHeight||720; const rackTop=rack.getBoundingClientRect?rack.getBoundingClientRect().top:0;
+const availH=Math.max(220,(rackTop>0?vh-rackTop:vh-250)-128);
+let s=0.55;
+for(let k=1.0;k>=0.55;k-=0.04){
+const tw=BASE.tube*k, seg=BASE.seg*k, gx=BASE.gapX*k, gy=BASE.gapY*k;
+const th=BASE.rimH*k + seg*4 + 6;
+const cols=Math.max(1,Math.floor((availW+gx)/(tw+gx)));
+const rows=Math.ceil(count/cols);
+if(rows*th+(rows-1)*gy<=availH){ s=k; break; }
 }
-const r = document.documentElement.style;
-const px = (v) => Math.round(v * chosen) + 'px';
-r.setProperty('--seg-h',  px(BASE.seg));
-r.setProperty('--body-w', px(BASE.body));
-r.setProperty('--neck-w', px(BASE.neckW));
-r.setProperty('--neck-h', px(BASE.neckH));
-r.setProperty('--sh-h',   px(BASE.sh));
-r.setProperty('--foil-h', px(BASE.foil));
-r.setProperty('--gap-x',  px(BASE.gapX));
-r.setProperty('--gap-y',  px(BASE.gapY));
-r.setProperty('--lbl',    Math.max(6, Math.round(8 * chosen)) + 'px');
+const r=document.documentElement.style, px=v=>Math.round(v*s)+'px';
+r.setProperty('--seg-h',px(BASE.seg)); r.setProperty('--tube-w',px(BASE.tube)); r.setProperty('--rim-w',px(BASE.rim));
+r.setProperty('--gap-x',px(BASE.gapX)); r.setProperty('--gap-y',px(BASE.gapY));
 }
-function makeSeg(color, grow){
-const seg = document.createElement('div');
-seg.className = 'seg' + (grow ? ' grow' : '');
-seg.style.background = `var(--c${color})`;
-const g = document.createElement('span');
-g.className = 'glyph'; g.textContent = GLYPHS[color] || '';
-seg.appendChild(g);
-return seg;
+function makeSeg(color,grow){
+const seg=document.createElement('div'); seg.className='seg'+(grow?' grow':''); seg.style.background=`var(--c${color})`;
+const g=document.createElement('span'); g.className='glyph'; g.textContent=GLYPHS[color]||''; seg.appendChild(g); return seg;
 }
-function makeTube(i, tube){
-const el = document.createElement('button');
-el.className = 'tube';
-el.setAttribute('aria-label', `ボトル ${i+1}`);
-if(i === sel) el.classList.add('sel');
-const done = tube.length === CAP && isMonochrome(tube);
-if(done) el.classList.add('done');
-el.innerHTML =
-'<div class="foil"></div><div class="neck"></div>' +
-'<div class="shoulder"></div><div class="body"></div>' +
-'<div class="label"></div>';
-const body = el.querySelector('.body');
-tube.forEach(c => body.appendChild(makeSeg(c, false)));
-setLabel(el, done ? tube[0] : null);
-el.addEventListener('click', () => onTubeClick(i));
-return el;
-}
-function setLabel(tubeEl, color){
-const lb = tubeEl.querySelector('.label');
-if(!lb) return;
-if(color === null || color === undefined){ lb.innerHTML = ''; return; }
-const w = WINES[color] || ['',''];
-lb.innerHTML = `<b>${w[0]}</b>${w[1]}`;
+function makeTube(i,tube){
+const el=document.createElement('button'); el.className='tube'; el.setAttribute('aria-label',`試験管 ${i+1}`);
+if(i===sel) el.classList.add('sel');
+if(tube.length===CAP && isMono(tube)) el.classList.add('done');
+el.innerHTML='<div class="rim"></div><div class="glass"></div>';
+const glass=el.querySelector('.glass'); tube.forEach(c=>glass.appendChild(makeSeg(c,false)));
+el.addEventListener('click',()=>onTubeClick(i)); return el;
 }
 function render(){
 fitBoard(state.tubes.length);
-rack.innerHTML = '';
-state.tubes.forEach((tube, i) => rack.appendChild(makeTube(i, tube)));
-$('#lv').textContent = state.level;
-$('#mv').textContent = state.moves;
-$('#best').textContent = maxLevel;
-$('#undo').disabled = state.history.length === 0 || lock;
+rack.innerHTML='';
+state.tubes.forEach((t,i)=>rack.appendChild(makeTube(i,t)));
+$('#lv').textContent=state.level; $('#mv').textContent=state.moves; $('#best').textContent=maxLevel;
+$('#undo').disabled=state.history.length===0||lock;
+$('#addcnt').textContent='×'+state.addsLeft; $('#addtube').disabled=state.addsLeft<=0||lock;
 }
 function loadLevel(level){
-const g = generateLevel(level);
-state = { level, tubes:g.tubes, initial:clone(g.tubes), moves:0, history:[] };
-sel = null; winShown = false; hideWin();
-maxLevel = Math.max(maxLevel, level); saveMeta();
-render(); save();
+const g=generateLevel(level);
+state={level,tubes:g.tubes,initial:clone(g.tubes),moves:0,history:[],addsLeft:ADD_TUBES_PER_LEVEL};
+sel=null; winShown=false; hideWin(); maxLevel=Math.max(maxLevel,level); saveMeta(); render(); save();
 }
-function restart(){
-if(lock) return;
-state.tubes = clone(state.initial);
-state.moves = 0; state.history = [];
-sel = null; winShown = false; hideWin();
-render(); save();
-}
+function restart(){ if(lock) return; state.tubes=clone(state.initial); state.moves=0; state.history=[]; state.addsLeft=ADD_TUBES_PER_LEVEL; sel=null; winShown=false; hideWin(); render(); save(); }
 function onTubeClick(i){
-audio.ensure(); startBgmIfNeeded();
-if(lock || winShown) return;
-if(sel === null){
-if(state.tubes[i].length){ sel = i; audio.select(); render(); }
-return;
-}
-if(sel === i){ sel = null; render(); return; }
-const from = sel; sel = null;
-if(canPour(state.tubes, from, i)){
-attemptPour(from, i);
-}else{
-audio.invalid();
-if(state.tubes[i].length){ sel = i; audio.select(); }
-render();
-}
-}
-const wait = ms => new Promise(r => setTimeout(r, ms));
-const raf2 = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-async function attemptPour(from, to){
-lock = true;
-const color = topColor(state.tubes[from]);
-render(); // deselect
-const srcEl = rack.children[from];
-const dstEl = rack.children[to];
-const sr = srcEl.getBoundingClientRect();
-const dr = dstEl.getBoundingClientRect();
-const toRight = (dr.left + dr.width/2) >= (sr.left + sr.width/2);
-srcEl.style.setProperty('--dir', toRight ? -1 : 1);
-srcEl.classList.add('pouring');
-await raf2(); // let the tilt transform settle before measuring the spout
-const sb = srcEl.querySelector('.body').getBoundingClientRect();
-const db = dstEl.querySelector('.body').getBoundingClientRect();
-const spoutX = toRight ? sb.right - 3 : sb.left + 3;
-const spoutY = sb.top + 3;
-const mouthX = db.left + db.width/2;
-const mouthY = db.top + 3;
-drawStream(spoutX, spoutY, mouthX, mouthY, color);
-await wait(120);
-state.history.push({ tubes: clone(state.tubes), moves: state.moves });
-const amt = pour(state.tubes, from, to);
-state.moves++;
-audio.pour(amt);
-$('#mv').textContent = state.moves;
-$('#undo').disabled = lock; // keep disabled during anim
-const srcBody = srcEl.querySelector('.body');
-const dstBody = dstEl.querySelector('.body');
-for(let k=0;k<amt;k++) if(srcBody.lastElementChild) srcBody.removeChild(srcBody.lastElementChild);
-for(let k=0;k<amt;k++) dstBody.appendChild(makeSeg(color, true));
-const completed = state.tubes[to].length === CAP && isMonochrome(state.tubes[to]);
-if(completed){
-setLabel(dstEl, color);
-dstEl.classList.add('done');       // label pops = 瓶詰め完了
-audio.complete();
-}
-await wait(210);
-srcEl.classList.remove('pouring');   // bottle rights itself
-if(completed){
-await wait(230);                   // let the sealed label register
-dstEl.classList.add('vanish');     // then it clears off the shelf
-await wait(300);
-state.tubes.splice(to, 1);         // remove the finished bottle from the board
-}else{
-await wait(140);
-}
-lock = false;
-render();  // normalize DOM (board reflows; remaining bottles resize up)
-save();
-if(isCleared(state.tubes)){ onWin(); }
-else if(!hasAnyMove(state.tubes)){
-toast('打てる手がありません。「もどす」か「やり直す」でどうぞ');
-audio.invalid();
-}
-}
-function isCleared(tubes){
-return tubes.every(t => t.length === 0);
-}
-function hasAnyMove(tubes){
-for(let i=0;i<tubes.length;i++){
-if(!tubes[i].length) continue;
-for(let j=0;j<tubes.length;j++){
-if(i!==j && canPour(tubes, i, j)) return true;
-}
-}
-return false;
-}
-function drawStream(x1,y1,x2,y2,color){
-const dx = x2-x1, dy = y2-y1;
-const len = Math.hypot(dx,dy);
-const ang = Math.atan2(dy,dx) * 180/Math.PI;
-const s = document.createElement('div');
-s.className = 'stream';
-s.style.left = x1+'px';
-s.style.top  = (y1-4)+'px';
-s.style.width = len+'px';
-s.style.transform = `rotate(${ang}deg)`;
-s.style.background = `linear-gradient(90deg, var(--c${color}), color-mix(in srgb, var(--c${color}) 70%, #fff))`;
-fx.appendChild(s);
-requestAnimationFrame(()=> s.classList.add('go'));
-setTimeout(()=> s.remove(), 380);
-}
-function undo(){
-if(lock || !state.history.length) return;
-const prev = state.history.pop();
-state.tubes = prev.tubes; state.moves = prev.moves;
-sel = null; winShown = false; hideWin();
-audio.undo();
-render(); save();
-}
-function hint(){
 audio.ensure();
-if(lock || winShown) return;
-const path = solve(clone(state.tubes), 260000);
-if(!path || !path.length){ toast('打てる手がなさそう。もどすか、やり直してね'); return; }
-const [f,t] = path[0];
-flash(f); flash(t);
+if(lock||winShown) return;
+if(sel===null){ if(state.tubes[i].length){ sel=i; audio.select(); render(); } return; }
+if(sel===i){ sel=null; render(); return; }
+const from=sel; sel=null;
+if(canPour(state.tubes,from,i)) attemptPour(from,i);
+else{ audio.invalid(); if(state.tubes[i].length){ sel=i; audio.select(); } render(); }
 }
-function flash(i){
-const el = rack.children[i]; if(!el) return;
-el.classList.add('hintf');
-setTimeout(() => el.classList.remove('hintf'), 1000);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const raf2=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+async function attemptPour(from,to){
+lock=true; const color=topColor(state.tubes[from]); render();
+const srcEl=rack.children[from], dstEl=rack.children[to];
+const sr=srcEl.getBoundingClientRect(), dr=dstEl.getBoundingClientRect();
+const toRight=(dr.left+dr.width/2)>=(sr.left+sr.width/2);
+srcEl.style.setProperty('--dir',toRight?-1:1); srcEl.classList.add('pouring');
+await raf2();
+const sb=srcEl.querySelector('.glass').getBoundingClientRect(), db=dstEl.querySelector('.glass').getBoundingClientRect();
+drawStream(toRight?sb.right-3:sb.left+3, sb.top+3, db.left+db.width/2, db.top+3, color);
+await wait(120);
+state.history.push({tubes:clone(state.tubes),moves:state.moves,addsLeft:state.addsLeft});
+const amt=pour(state.tubes,from,to); state.moves++; audio.pour(amt);
+$('#mv').textContent=state.moves;
+const srcGlass=srcEl.querySelector('.glass'), dstGlass=dstEl.querySelector('.glass');
+for(let k=0;k<amt;k++) if(srcGlass.lastElementChild) srcGlass.removeChild(srcGlass.lastElementChild);
+for(let k=0;k<amt;k++) dstGlass.appendChild(makeSeg(color,true));
+const doneNow=state.tubes[to].length===CAP && isMono(state.tubes[to]);
+if(doneNow){ dstEl.classList.add('done'); audio.done(); }
+await wait(210); srcEl.classList.remove('pouring'); await wait(120);
+lock=false; render(); save();
+if(isSolved(state.tubes)) onWin();
+else if(!hasAnyMove(state.tubes) && state.addsLeft<=0){ toast('手詰まりです。「もどす」か「最初から」でどうぞ'); audio.invalid(); }
 }
-function onWin(){
-winShown = true;
-maxLevel = Math.max(maxLevel, state.level);
-saveMeta();
-audio.win();
-$('#winSub').textContent = `${state.moves} 手でクリア。棚をぜんぶ片付けました。`;
-setTimeout(showWin, 240);
+function hasAnyMove(tubes){ for(let i=0;i<tubes.length;i++){ if(!tubes[i].length) continue; for(let j=0;j<tubes.length;j++){ if(i!==j && canPour(tubes,i,j)) return true; } } return false; }
+function drawStream(x1,y1,x2,y2,color){
+const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI;
+const s=document.createElement('div'); s.className='stream'; s.style.left=x1+'px'; s.style.top=(y1-4)+'px';
+s.style.width=len+'px'; s.style.transform=`rotate(${ang}deg)`;
+s.style.background=`linear-gradient(90deg, var(--c${color}), color-mix(in srgb, var(--c${color}) 72%, #fff))`;
+fx.appendChild(s); requestAnimationFrame(()=>s.classList.add('go')); setTimeout(()=>s.remove(),380);
 }
-function showWin(){
-const card = $('#overlay .card');
-card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
-$('#overlay').classList.add('show');
-}
+function undo(){ if(lock||!state.history.length) return; const p=state.history.pop(); state.tubes=p.tubes; state.moves=p.moves; state.addsLeft=p.addsLeft; sel=null; winShown=false; hideWin(); audio.undo(); render(); save(); }
+function addTube(){ if(lock||state.addsLeft<=0) return; state.history.push({tubes:clone(state.tubes),moves:state.moves,addsLeft:state.addsLeft}); state.tubes.push([]); state.addsLeft--; sel=null; audio.add(); render(); save(); toast('空の試験管を1本ふやしました'); }
+function hint(){ audio.ensure(); if(lock||winShown) return; const path=solve(clone(state.tubes),260000); if(!path||!path.length){ toast('打てる手がなさそう。もどすか試験管を足してね'); return; } const [f,t]=path[0]; flash(f); flash(t); }
+function flash(i){ const el=rack.children[i]; if(!el) return; el.classList.add('hintf'); setTimeout(()=>el.classList.remove('hintf'),1000); }
+function onWin(){ winShown=true; maxLevel=Math.max(maxLevel,state.level+1); saveMeta(); audio.win(); $('#winSub').textContent=`レベル ${state.level} を ${state.moves} 手でクリア！`; setTimeout(showWin,240); }
+function showWin(){ const c=$('#overlay .card'); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); $('#overlay').classList.add('show'); }
 function hideWin(){ $('#overlay').classList.remove('show'); }
-let toastTimer = null;
-function toast(msg){
-const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-clearTimeout(toastTimer);
-toastTimer = setTimeout(() => t.classList.remove('show'), 1900);
-}
-function applySettingsUI(){
-const s = $('#tSound'), p = $('#tPat');
-s.setAttribute('aria-pressed', String(soundOn)); s.classList.toggle('on', soundOn);
-s.textContent = soundOn ? '🔊' : '🔇';
-p.setAttribute('aria-pressed', String(patternOn)); p.classList.toggle('on', patternOn);
-document.body.classList.toggle('pat', patternOn);
-}
-function startBgmIfNeeded(){ if(soundOn){ audio.ensure(); audio.startBgm(); } }
-$('#tSound').addEventListener('click', () => {
-soundOn = !soundOn; saveMeta(); applySettingsUI();
-if(soundOn){ audio.ensure(); audio.startBgm(); audio.select(); }
-else{ audio.stopBgm(); }
-});
-$('#tPat').addEventListener('click', () => {
-patternOn = !patternOn; saveMeta(); applySettingsUI();
-});
-$('#undo').addEventListener('click', undo);
-$('#hint').addEventListener('click', hint);
-$('#restart').addEventListener('click', restart);
-$('#replay').addEventListener('click', () => { hideWin(); restart(); });
-$('#next').addEventListener('click', () => { hideWin(); loadLevel(state.level + 1); });
-document.addEventListener('keydown', e => {
-if(e.key==='z'||e.key==='Z') undo();
-else if(e.key==='h'||e.key==='H') hint();
-else if(e.key==='r'||e.key==='R') restart();
-});
-window.addEventListener('resize', () => { if(state && !lock) render(); });
+let toastTimer=null;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1900); }
+function applySettingsUI(){ const s=$('#tSound'),p=$('#tPat');
+s.setAttribute('aria-pressed',String(soundOn)); s.classList.toggle('on',soundOn); s.textContent=soundOn?'🔊':'🔇';
+p.setAttribute('aria-pressed',String(patternOn)); p.classList.toggle('on',patternOn); document.body.classList.toggle('pat',patternOn); }
+$('#tSound').addEventListener('click',()=>{ soundOn=!soundOn; saveMeta(); applySettingsUI(); if(soundOn){ audio.ensure(); audio.select(); } });
+$('#tPat').addEventListener('click',()=>{ patternOn=!patternOn; saveMeta(); applySettingsUI(); });
+$('#undo').addEventListener('click',undo);
+$('#addtube').addEventListener('click',addTube);
+$('#hint').addEventListener('click',hint);
+$('#restart').addEventListener('click',restart);
+$('#replay').addEventListener('click',()=>{ hideWin(); restart(); });
+$('#next').addEventListener('click',()=>{ hideWin(); loadLevel(state.level+1); });
+document.addEventListener('keydown',e=>{ if(e.key==='z'||e.key==='Z')undo(); else if(e.key==='h'||e.key==='H')hint(); else if(e.key==='r'||e.key==='R')restart(); });
+window.addEventListener('resize',()=>{ if(state&&!lock) render(); });
 (function boot(){
-loadMeta();
-applySettingsUI();
-let resumed = false;
-try{
-const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-if(s && Array.isArray(s.tubes) && s.tubes.length){
-state = { level:s.level, tubes:s.tubes, initial:s.initial||clone(s.tubes),
-moves:s.moves||0, history:s.history||[] };
-sel = null; winShown = false;
-render(); resumed = true;
-if(isCleared(state.tubes)) onWin();
-}
+loadMeta(); applySettingsUI(); let resumed=false;
+try{ const s=JSON.parse(localStorage.getItem(SAVE_KEY));
+if(s&&Array.isArray(s.tubes)&&s.tubes.length){ state={level:s.level,tubes:s.tubes,initial:s.initial||clone(s.tubes),moves:s.moves||0,history:s.history||[],addsLeft:(typeof s.addsLeft==='number'?s.addsLeft:ADD_TUBES_PER_LEVEL)}; sel=null; winShown=false; render(); resumed=true; if(isSolved(state.tubes)) onWin(); }
 }catch(e){}
 if(!resumed) loadLevel(START_LEVEL);
 })();
